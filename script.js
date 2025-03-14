@@ -141,19 +141,87 @@ async function calculateDMA() {
     await initializePyodide();
     
     const Q_a = parseFloat(document.getElementById('dma-qa').value);
-    const Q_sh = parseFloat(document.getElementById('dma-qsh').value);
     
-    const result = await pyodide.runPythonAsync(`calculate_DMA(${Q_a}, ${Q_sh})`);
-    
-    const trace = {
-        x: [result.d_min, result.d_max],
-        y: [result.R_B, result.R_B],
-        mode: 'lines',
-        name: 'DMA Range',
-        line: {
-            color: 'red',
-            width: 2
+    const result = await pyodide.runPythonAsync(`
+    def calculate_DMA(Q_a):
+        P = 101325
+        T = 298.15
+        mu = 1.81809e-5 * (T / 293.15) ** 1.5 * (293.15 + 110.4) / (T + 110.4)
+        Q_a = Q_a / 60000
+
+        Q_sh_lb = 2 / 60000
+        Q_sh_ub = 30 / 60000
+        r_1 = 9.37e-3
+        r_2 = 19.61e-3
+        L = 0.44369
+        e = 1.6e-19
+        V_min = 10
+        V_max = 10000
+
+        log_r_ratio = np.log(r_2 / r_1)
+        factor1 = (2 * V_min * L * e) / (3 * mu * log_r_ratio)
+        factor2 = (2 * V_max * L * e) / (3 * mu * log_r_ratio)
+
+        Q_sh_spa = np.linspace(Q_sh_lb, Q_sh_ub, 500)
+        R_B = Q_sh_spa / Q_a
+        R_B_lb = Q_sh_lb / Q_a
+        R_B_up = Q_sh_ub / Q_a
+
+        d_min = np.zeros_like(Q_sh_spa)
+        d_max = np.zeros_like(Q_sh_spa)
+
+        for i, Q_sh_val in enumerate(Q_sh_spa):
+            d_min[i] = float(fsolve(lambda d: d - (factor1 / Q_sh_val) * Cc(d, P, T), 1e-8)[0])
+            d_max[i] = float(fsolve(lambda d: d - (factor2 / Q_sh_val) * Cc(d, P, T), 1e-6)[0])
+
+        return {
+            'd_min': d_min.tolist(),
+            'd_max': d_max.tolist(),
+            'R_B': R_B.tolist(),
+            'R_B_lb': float(R_B_lb),
+            'R_B_up': float(R_B_up)
         }
+
+    calculate_DMA(${Q_a})
+    `);
+    
+    // Create the main operational range traces
+    const trace1 = {
+        x: result.d_min.map(d => d * 1e9),
+        y: result.R_B,
+        mode: 'lines',
+        name: 'Lower bound',
+        line: { color: 'red' }
+    };
+    
+    const trace2 = {
+        x: result.d_max.map(d => d * 1e9),
+        y: result.R_B,
+        mode: 'lines',
+        name: 'Upper bound',
+        line: { color: 'red' }
+    };
+
+    // Create the horizontal lines
+    const d_min_0 = result.d_min[0] * 1e9;
+    const d_max_0 = result.d_max[0] * 1e9;
+    const d_min_last = result.d_min[result.d_min.length - 1] * 1e9;
+    const d_max_last = result.d_max[result.d_max.length - 1] * 1e9;
+
+    const trace3 = {
+        x: [d_min_0, d_max_0],
+        y: [result.R_B_lb, result.R_B_lb],
+        mode: 'lines',
+        name: 'Lower R_B',
+        line: { color: 'red' }
+    };
+
+    const trace4 = {
+        x: [d_min_last, d_max_last],
+        y: [result.R_B_up, result.R_B_up],
+        mode: 'lines',
+        name: 'Upper R_B',
+        line: { color: 'red' }
     };
     
     const layout = {
@@ -165,10 +233,12 @@ async function calculateDMA() {
         yaxis: {
             title: 'R_B',
             type: 'log'
-        }
+        },
+        showlegend: true,
+        grid: true
     };
     
-    Plotly.newPlot('dma-plot', [trace], layout);
+    Plotly.newPlot('dma-plot', [trace1, trace2, trace3, trace4], layout);
 }
 
 async function calculateAAC() {
