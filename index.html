@@ -162,35 +162,31 @@
                         x: d_min_nm,
                         y: R_B,
                         mode: 'lines',
-                        name: 'Lower bound',
                         line: { color: 'red' }
                     },
                     {
                         x: d_max_nm,
                         y: R_B,
                         mode: 'lines',
-                        name: 'Upper bound',
                         line: { color: 'red' }
                     },
                     {
                         x: [d_min_nm[0], d_max_nm[0]],
                         y: [R_B_lb, R_B_lb],
                         mode: 'lines',
-                        name: 'Lower R_B',
                         line: { color: 'red' }
                     },
                     {
                         x: [d_min_nm[d_min_nm.length-1], d_max_nm[d_max_nm.length-1]],
                         y: [R_B_up, R_B_up],
                         mode: 'lines',
-                        name: 'Upper R_B',
                         line: { color: 'red' }
                     },
                     {
                         x: [d_i * 1e9, d_o * 1e9],
                         y: [Q_sh / Q_a, Q_sh / Q_a],
                         mode: 'lines',
-                        name: 'Selected Q_sh',
+                        name: 'Selected sheath flow rate',
                         line: { color: 'blue' }
                     }
                 ];
