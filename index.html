@@ -29,12 +29,12 @@
                 <div class="row">
                     <div class="col-md-4">
                         <div class="form-group mb-3">
-                            <label for="qa">Aerosol Flow Rate (Q_a) [L/min]:</label>
-                            <input type="number" class="form-control" id="qa" value="1.5" min="0.1" max="10" step="0.1">
+                            <label for="qa">Aerosol Flow Rate ($Q_{\mathrm{a}}$) [L/min]:</label>
+                            <input type="number" class="form-control" id="qa" value="0.3" min="0.1" max="10" step="0.1">
                         </div>
                         <div class="form-group mb-3">
-                            <label for="qsh">Sheath Flow Rate (Q_sh) [L/min]:</label>
-                            <input type="number" class="form-control" id="qsh" value="10" min="2" max="30" step="0.1">
+                            <label for="qsh">Sheath Flow Rate ($Q_{\mathrm{sh}}$) [L/min]:</label>
+                            <input type="number" class="form-control" id="qsh" value="3" min="2" max="30" step="0.1">
                         </div>
                         <button class="btn btn-primary" onclick="calculateDMA()">Calculate</button>
                     </div>
@@ -162,31 +162,35 @@
                         x: d_min_nm,
                         y: R_B,
                         mode: 'lines',
+                        name: 'Lower bound',
                         line: { color: 'red' }
                     },
                     {
                         x: d_max_nm,
                         y: R_B,
                         mode: 'lines',
+                        name: 'Upper bound',
                         line: { color: 'red' }
                     },
                     {
                         x: [d_min_nm[0], d_max_nm[0]],
                         y: [R_B_lb, R_B_lb],
                         mode: 'lines',
+                        name: 'Lower R_B',
                         line: { color: 'red' }
                     },
                     {
                         x: [d_min_nm[d_min_nm.length-1], d_max_nm[d_max_nm.length-1]],
                         y: [R_B_up, R_B_up],
                         mode: 'lines',
+                        name: 'Upper R_B',
                         line: { color: 'red' }
                     },
                     {
                         x: [d_i * 1e9, d_o * 1e9],
                         y: [Q_sh / Q_a, Q_sh / Q_a],
                         mode: 'lines',
-                        name: 'Selected sheath flow rate',
+                        name: 'Selected Q_sh',
                         line: { color: 'blue' }
                     }
                 ];

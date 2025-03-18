@@ -75,6 +75,9 @@ async function calculateDMA() {
         // Convert diameter values from meters to nanometers
         const d_min_nm = result.d_min.map(d => d * 1e9);
         const d_max_nm = result.d_max.map(d => d * 1e9);
+        const R_B = result.R_B;
+        const R_B_lb = result.R_B_lb;
+        const R_B_up = result.R_B_up;
 
         // Format numbers to scientific notation with 2 decimal places
         function formatScientific(num) {
@@ -84,45 +87,38 @@ async function calculateDMA() {
         const traces = [
             {
                 x: d_min_nm,
-                y: result.R_B,
+                y: R_B,
                 mode: 'lines',
-                name: 'Lower bound',
-                line: { color: 'red' }
+                line: { color: 'red' },
+                showlegend: false
             },
             {
                 x: d_max_nm,
-                y: result.R_B,
+                y: R_B,
                 mode: 'lines',
-                name: 'Upper bound',
-                line: { color: 'red' }
+                line: { color: 'red' },
+                showlegend: false
             },
             {
                 x: [d_min_nm[0], d_max_nm[0]],
-                y: [result.R_B_lb, result.R_B_lb],
+                y: [R_B_lb, R_B_lb],
                 mode: 'lines',
-                name: 'Lower R_B',
-                line: { color: 'red' }
+                line: { color: 'red' },
+                showlegend: false
             },
             {
                 x: [d_min_nm[d_min_nm.length-1], d_max_nm[d_max_nm.length-1]],
-                y: [result.R_B_up, result.R_B_up],
+                y: [R_B_up, R_B_up],
                 mode: 'lines',
-                name: 'Upper R_B',
-                line: { color: 'red' }
+                line: { color: 'red' },
+                showlegend: false
             },
             {
                 x: [d_i * 1e9, d_o * 1e9],
                 y: [Q_sh / Q_a, Q_sh / Q_a],
-                mode: 'lines+text',
+                mode: 'lines',
                 name: 'Selected Q_sh',
-                line: { color: 'blue' },
-                text: [`d_i = ${formatScientific(d_i * 1e9)} nm`, `d_o = ${formatScientific(d_o * 1e9)} nm`],
-                textposition: ['bottom left', 'bottom right'],
-                textfont: {
-                    family: 'Arial',
-                    size: 12,
-                    color: 'blue'
-                }
+                line: { color: 'blue' }
             }
         ];
         
