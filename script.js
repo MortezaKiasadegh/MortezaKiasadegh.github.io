@@ -211,66 +211,115 @@ async function calculateDMA() {
 }
 
 async function calculateAAC() {
-    await initializePyodide();
-    
-    const Q_a = parseFloat(document.getElementById('aac-qa').value);
-    const Q_sh = parseFloat(document.getElementById('aac-qsh').value);
-    
-    const result = await pyodide.runPythonAsync(`calculate_AAC(${Q_a}, ${Q_sh})`);
-    
-    const trace = {
-        x: [result.d_min, result.d_max],
-        y: [result.R_t, result.R_t],
-        mode: 'lines',
-        name: 'AAC Range',
-        line: {
-            color: 'blue',
-            width: 2
-        }
-    };
-    
-    const layout = {
-        title: 'AAC Operational Range',
-        xaxis: {
-            title: {
-                text: 'Aerodynamic diameter, d_a (nm)',
-                font: { size: 14 }
+    try {
+        console.log('Starting AAC calculation...');
+        
+        // Constants
+        const P = 101325;
+        const T = 298.15;
+        const mu = 1.81809e-5 * Math.pow(T / 293.15, 1.5) * (293.15 + 110.4) / (T + 110.4);
+        const Q_a = parseFloat(document.getElementById('aac-qa').value) / 60000;
+        const Q_sh = parseFloat(document.getElementById('aac-qsh').value) / 60000;
+        
+        console.log('Q_a:', Q_a, 'Q_sh:', Q_sh);
+        
+        const Q_sh_lb = 2 / 60000;
+        const Q_sh_ub = 15 / 60000;
+        const Q_sh_RB = 10 / 60000;
+        const r_1 = 56e-3;
+        const r_2 = 60e-3;
+        const L = 0.206;
+        const w_lb_i = 2 * Math.PI / 60 * 200;
+        const w_ub_i = 2 * Math.PI / 60 * 7000;
+
+        const points = 100;
+        const Q_sh_spa = Array.from({length: points}, (_, i) => 
+            Q_sh_lb + (Q_sh_ub - Q_sh_lb) * i / (points - 1));
+        const R_t = Q_sh_spa.map(q => q / Q_a);
+        
+        console.log('Calculating w_up...');
+        const w_up = Q_sh_spa.map(Q => {
+            if (Q < Q_sh_RB) {
+                return Math.min(w_ub_i, 723.7 - 9.87 * 60000 * Q);
+            } else {
+                return Math.min(w_ub_i, 875 - 25 * 60000 * Q);
+            }
+        });
+
+        const w_low = Array(points).fill(w_lb_i);
+
+        const factor1 = w_low.map(w => (36 * mu) / (Math.PI * 1000 * Math.pow(r_1 + r_2, 2) * L * Math.pow(w, 2)));
+        const factor2 = w_up.map(w => (36 * mu) / (Math.PI * 1000 * Math.pow(r_1 + r_2, 2) * L * Math.pow(w, 2)));
+
+        console.log('Calculating d_min and d_max...');
+        const d_min = Q_sh_spa.map((Q_sh_val, i) => {
+            const f = d => Math.pow(d, 2) * Cc(d, P, T) - (factor2[i] * Q_sh_val);
+            return bisectionMethod(f, 1e-9, 1e-7);
+        });
+
+        const d_max = Q_sh_spa.map((Q_sh_val, i) => {
+            const f = d => Math.pow(d, 2) * Cc(d, P, T) - (factor1[i] * Q_sh_val);
+            return bisectionMethod(f, 1e-7, 1e-5);
+        });
+
+        console.log('Plotting...');
+        const trace = {
+            x: [d_min, d_max],
+            y: [R_t, R_t],
+            mode: 'lines',
+            name: 'AAC Range',
+            line: {
+                color: 'blue',
+                width: 2
+            }
+        };
+        
+        const layout = {
+            title: 'AAC Operational Range',
+            xaxis: {
+                title: {
+                    text: 'Aerodynamic diameter, d_a (nm)',
+                    font: { size: 14 }
+                },
+                type: 'log',
+                showgrid: true,
+                gridwidth: 1,
+                range: [1, 3],  // 10 to 1000 nm
+                dtick: 1
             },
-            type: 'log',
-            showgrid: true,
-            gridwidth: 1,
-            range: [1, 3],  // 10 to 1000 nm
-            dtick: 1
-        },
-        yaxis: {
-            title: {
-                text: 'R_τ',
-                font: { size: 14 }
+            yaxis: {
+                title: {
+                    text: 'R_τ',
+                    font: { size: 14 }
+                },
+                type: 'log',
+                showgrid: true,
+                gridwidth: 1,
+                range: [0, 2],  // 1 to 100
+                dtick: 1
             },
-            type: 'log',
-            showgrid: true,
-            gridwidth: 1,
-            range: [0, 2],  // 1 to 100
-            dtick: 1
-        },
-        showlegend: true,
-        legend: {
-            x: 0.7,
-            y: 0.9,
-            xanchor: 'left',
-            yanchor: 'top'
-        },
-        width: 800,
-        height: 600,
-        margin: {
-            l: 80,
-            r: 50,
-            t: 50,
-            b: 80
-        }
-    };
-    
-    Plotly.newPlot('aac-plot', [trace], layout);
+            showlegend: true,
+            legend: {
+                x: 0.7,
+                y: 0.9,
+                xanchor: 'left',
+                yanchor: 'top'
+            },
+            width: 800,
+            height: 600,
+            margin: {
+                l: 80,
+                r: 50,
+                t: 50,
+                b: 80
+            }
+        };
+        
+        Plotly.newPlot('aac-plot', [trace], layout);
+    } catch (error) {
+        console.error('Error in calculateAAC:', error);
+        alert('An error occurred during calculation. Please check the console for details.');
+    }
 }
 
 async function calculateCPMA() {
@@ -311,32 +360,31 @@ document.addEventListener('DOMContentLoaded', calculateDMA);
 
 // Modify the bisection method to handle the AAC equations better
 function bisectionMethod(func, a, b, tolerance = 1e-10, maxIterations = 100) {
-    try {
-        let fa = func(a);
-        let fb = func(b);
+    let fa = func(a);
+    let fb = func(b);
+    
+    if (fa * fb > 0) {
+        throw new Error('Initial points do not bracket the root');
+    }
+    
+    for (let i = 0; i < maxIterations; i++) {
+        let c = (a + b) / 2;
+        let fc = func(c);
         
-        for (let i = 0; i < maxIterations; i++) {
-            let c = (a + b) / 2;
-            let fc = func(c);
-            
-            if (Math.abs(fc) < tolerance) {
-                return c;
-            }
-            
-            if (fa * fc < 0) {
-                b = c;
-                fb = fc;
-            } else {
-                a = c;
-                fa = fc;
-            }
+        if (Math.abs(fc) < tolerance) {
+            return c;
         }
         
-        return (a + b) / 2;
-    } catch (error) {
-        console.error('Error in bisectionMethod:', error);
-        throw error;
+        if (fa * fc < 0) {
+            b = c;
+            fb = fc;
+        } else {
+            a = c;
+            fa = fc;
+        }
     }
+    
+    return (a + b) / 2;
 }
 
 // Update the calculation of factors
