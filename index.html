@@ -92,8 +92,8 @@
                 const steps = 500;
                 const Q_sh_spa = numeric.linspace(Q_sh_lb, Q_sh_ub, steps);
                 const R_t = Q_sh_spa.map(Q => Q / Q_a);
-                const R_t_lb = Q_sh_spa.map(() => Q_sh_lb / Q_a);
-                const R_t_up = Q_sh_spa.map(() => Q_sh_ub / Q_a);
+                const R_t_lb = Q_sh_lb / Q_a;
+                const R_t_up = Q_sh_ub / Q_a;
 
                 const w_low = Q_sh_spa.map(() => w_lb_i);
                 const w_up = new Array(steps);
@@ -166,18 +166,20 @@
 
                 const traceAACHorizontalLower = {
                     x: [d_min[0] * 1e9, d_max[0] * 1e9],
-                    y: [R_t_lb[0], R_t_lb[0]],
+                    y: [R_t_lb, R_t_lb],
                     mode: 'lines',
                     name: 'Lower R_t',
-                    line: { color: 'blue', dash: 'dash' }
+                    line: { color: 'blue', dash: 'dash' },
+                    showlegend: false
                 };
 
                 const traceAACHorizontalUpper = {
                     x: [d_min[steps - 1] * 1e9, d_max[steps - 1] * 1e9],
-                    y: [R_t_up[steps - 1], R_t_up[steps - 1]],
+                    y: [R_t_up, R_t_up],
                     mode: 'lines',
                     name: 'Upper R_t',
-                    line: { color: 'blue', dash: 'dash' }
+                    line: { color: 'blue', dash: 'dash' },
+                    showlegend: false
                 };
 
                 const traceAACSelected = {
@@ -195,15 +197,22 @@
                             text: 'Aerodynamic diameter, $$D_{\\mathrm{a}}$$ [nm]',
                             font: { size: 10 }
                         },
-                        type: 'log'
+                        type: 'log',
+                        range: [1, 3],
+                        dtick: 1
                     },
                     yaxis: {
                         title: {
                             text: '$$R_{\\tau}$$',
                             font: { size: 8 }
                         },
-                        type: 'log'
-                    }
+                        type: 'log',
+                        range: [0, 2],
+                        dtick: 1
+                    },
+                    showlegend: true,
+                    width: 800,
+                    height: 600
                 };
 
                 const dataAAC = [
