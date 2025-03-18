@@ -76,7 +76,11 @@ async function calculateDMA() {
         const d_min_nm = result.d_min.map(d => d * 1e9);
         const d_max_nm = result.d_max.map(d => d * 1e9);
 
-        // Create the main operational range traces
+        // Format numbers to scientific notation with 2 decimal places
+        function formatScientific(num) {
+            return num.toExponential(2);
+        }
+
         const traces = [
             {
                 x: d_min_nm,
@@ -105,25 +109,86 @@ async function calculateDMA() {
                 mode: 'lines',
                 name: 'Upper R_B',
                 line: { color: 'red' }
+            },
+            {
+                x: [d_i * 1e9, d_o * 1e9],
+                y: [Q_sh / Q_a, Q_sh / Q_a],
+                mode: 'lines+text',
+                name: 'Selected Q_sh',
+                line: { color: 'blue' },
+                text: [`d_i = ${formatScientific(d_i * 1e9)} nm`, `d_o = ${formatScientific(d_o * 1e9)} nm`],
+                textposition: ['bottom left', 'bottom right'],
+                textfont: {
+                    family: 'Arial',
+                    size: 12,
+                    color: 'blue'
+                }
             }
         ];
         
         const layout = {
             title: 'DMA Operational Range',
             xaxis: {
-                title: 'Particle diameter (nm)',
+                title: {
+                    text: 'Mobility diameter, $D_{\\mathrm{m}}$ (nm)',
+                    font: {
+                        size: 14
+                    }
+                },
                 type: 'log',
-                showgrid: true
+                showgrid: true,
+                gridwidth: 1
             },
             yaxis: {
-                title: 'R_B',
+                title: {
+                    text: '$R_{\\mathrm{B}}$',
+                    font: {
+                        size: 14
+                    }
+                },
                 type: 'log',
-                showgrid: true
+                showgrid: true,
+                gridwidth: 1
             },
-            showlegend: true
+            showlegend: true,
+            annotations: [
+                {
+                    x: d_i * 1e9,
+                    y: Q_sh / Q_a,
+                    text: `d_i = ${formatScientific(d_i * 1e9)} nm`,
+                    showarrow: true,
+                    arrowhead: 2,
+                    arrowsize: 1,
+                    arrowwidth: 1,
+                    ax: -40,
+                    ay: -40,
+                    font: {
+                        color: 'blue'
+                    }
+                },
+                {
+                    x: d_o * 1e9,
+                    y: Q_sh / Q_a,
+                    text: `d_o = ${formatScientific(d_o * 1e9)} nm`,
+                    showarrow: true,
+                    arrowhead: 2,
+                    arrowsize: 1,
+                    arrowwidth: 1,
+                    ax: 40,
+                    ay: -40,
+                    font: {
+                        color: 'blue'
+                    }
+                }
+            ]
         };
         
-        Plotly.newPlot('plot', traces, layout);
+        // Add MathJax config to enable LaTeX rendering
+        const config = {
+            mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_SVG'
+        };
+
+        Plotly.newPlot('plot', traces, layout, config);
     } catch (error) {
         console.error('Error in calculateDMA:', error);
         alert('An error occurred during calculation. Please check the console for details.');
