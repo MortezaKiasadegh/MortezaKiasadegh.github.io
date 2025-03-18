@@ -1,12 +1,20 @@
 body {
     background-color: #f8f9fa;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 20px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .card {
+    background-color: white;
     border-radius: 15px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     border: none;
+    margin-bottom: 30px;
 }
 
 .card-header {
@@ -14,9 +22,6 @@ body {
     border-bottom: 1px solid #eee;
     border-radius: 15px 15px 0 0 !important;
     padding: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
 }
 
 .card-body {
@@ -35,42 +40,94 @@ h1 {
 }
 
 h2 {
-    color: #34495e;
-    font-weight: 500;
+    color: #2c3e50;
+    font-weight: 600;
     margin: 0;
+    font-size: 1.75rem;
 }
 
 .form-group {
     margin-bottom: 1.5rem;
 }
 
+label {
+    color: #495057;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
 .form-control {
     border-radius: 8px;
-    border: 1px solid #ddd;
+    border: 1px solid #ced4da;
     padding: 0.75rem;
+    width: 100%;
+    font-size: 1rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
 .form-control:focus {
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
     border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    outline: 0;
 }
 
 .btn-primary {
-    background-color: #3498db;
+    background-color: #007bff;
     border: none;
     border-radius: 8px;
-    padding: 0.75rem 2rem;
+    color: white;
+    padding: 0.75rem 1.5rem;
     font-weight: 500;
+    font-size: 1rem;
     transition: all 0.3s ease;
+    cursor: pointer;
 }
 
 .btn-primary:hover {
-    background-color: #2980b9;
+    background-color: #0056b3;
     transform: translateY(-1px);
 }
 
-label {
-    color: #7f8c8d;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.plot-container {
+    height: 600px;
+    width: 100%;
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .card {
+        margin: 10px;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+
+    .plot-container {
+        height: 400px;
+    }
+}
+
+/* Plot styling */
+.js-plotly-plot {
+    border-radius: 8px;
+}
+
+.js-plotly-plot .plotly .main-svg {
+    border-radius: 8px;
+}
+
+/* Input number spinner styling */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    opacity: 1;
+    height: 24px;
 } 
