@@ -1,9 +1,10 @@
+let pyodide = null;
+
 async function initializePyodide() {
     if (!pyodide) {
         pyodide = await loadPyodide();
         await pyodide.loadPackage(['numpy', 'scipy']);
         
-        // Load the Python functions
         await pyodide.runPythonAsync(`
             import numpy as np
             from scipy.optimize import fsolve
@@ -24,13 +25,14 @@ async function calculateDMA() {
         await initializePyodide();
         
         const Q_a = parseFloat(document.getElementById('qa').value) / 60000;
+        const Q_sh = parseFloat(document.getElementById('qsh').value) / 60000;
         
         const result = await pyodide.runPythonAsync(`
-            def calculate_DMA(Q_a):
+            def calculate_DMA(Q_a, Q_sh):
                 P = 101325
                 T = 298.15
                 mu = 1.81809e-5 * (T / 293.15) ** 1.5 * (293.15 + 110.4) / (T + 110.4)
-                Q_a = Q_a / 60000
+                Q_a = Q_a
 
                 Q_sh_lb = 2 / 60000
                 Q_sh_ub = 30 / 60000
@@ -45,7 +47,7 @@ async function calculateDMA() {
                 factor1 = (2 * V_min * L * e) / (3 * mu * log_r_ratio)
                 factor2 = (2 * V_max * L * e) / (3 * mu * log_r_ratio)
 
-                Q_sh_spa = np.linspace(Q_sh_lb, Q_sh_ub, 100)  # Reduced points for faster calculation
+                Q_sh_spa = np.linspace(Q_sh_lb, Q_sh_ub, 100)
                 R_B = Q_sh_spa / Q_a
                 R_B_lb = Q_sh_lb / Q_a
                 R_B_up = Q_sh_ub / Q_a
@@ -57,18 +59,23 @@ async function calculateDMA() {
                     d_min[i] = float(fsolve(lambda d: d - (factor1 / Q_sh_val) * Cc(d, P, T), 1e-8)[0])
                     d_max[i] = float(fsolve(lambda d: d - (factor2 / Q_sh_val) * Cc(d, P, T), 1e-6)[0])
 
+                # Calculate specific points for input Q_sh
+                d_i = float(fsolve(lambda d: d - (factor1 / Q_sh) * Cc(d, P, T), 1e-8)[0])
+                d_o = float(fsolve(lambda d: d - (factor2 / Q_sh) * Cc(d, P, T), 1e-6)[0])
+
                 return {
                     'd_min': d_min.tolist(),
                     'd_max': d_max.tolist(),
                     'R_B': R_B.tolist(),
                     'R_B_lb': float(R_B_lb),
-                    'R_B_up': float(R_B_up)
+                    'R_B_up': float(R_B_up),
+                    'd_i': float(d_i),
+                    'd_o': float(d_o),
+                    'Q_sh': float(Q_sh)
                 }
 
-            calculate_DMA(${Q_a})
+            calculate_DMA(${Q_a}, ${Q_sh})
         `);
-
-        console.log('Calculation result:', result);  // Debug output
 
         // Convert diameter values from meters to nanometers
         const d_min_nm = result.d_min.map(d => d * 1e9);
@@ -76,6 +83,9 @@ async function calculateDMA() {
         const R_B = result.R_B;
         const R_B_lb = result.R_B_lb;
         const R_B_up = result.R_B_up;
+        const d_i = result.d_i;
+        const d_o = result.d_o;
+        const Q_sh_result = result.Q_sh;
 
         // Format numbers to scientific notation with 2 decimal places
         function formatScientific(num) {
@@ -113,7 +123,7 @@ async function calculateDMA() {
             },
             {
                 x: [d_i * 1e9, d_o * 1e9],
-                y: [Q_sh / Q_a, Q_sh / Q_a],
+                y: [Q_sh_result / Q_a, Q_sh_result / Q_a],
                 mode: 'lines',
                 name: 'Selected Q_sh',
                 line: { color: 'blue' }
@@ -124,7 +134,7 @@ async function calculateDMA() {
             title: 'DMA Operational Range',
             xaxis: {
                 title: {
-                    text: '$Mobility diameter, D_{\\mathrm{m}} (nm)$',
+                    text: 'Mobility diameter, $$d_\\mathrm{m}$$ (nm)', // Double $$ for MathJax
                     font: {
                         size: 14
                     }
@@ -135,7 +145,7 @@ async function calculateDMA() {
             },
             yaxis: {
                 title: {
-                    text: '$R_\\mathrm{B}$',
+                    text: '$$R_\\mathrm{B}$$', // Double $$ for MathJax
                     font: {
                         size: 14
                     }
@@ -148,8 +158,8 @@ async function calculateDMA() {
             annotations: [
                 {
                     x: d_i * 1e9,
-                    y: Q_sh / Q_a,
-                    text: '$d_\\mathrm{m,i}$ = ' + formatScientific(d_i * 1e9) + ' nm',
+                    y: Q_sh_result / Q_a,
+                    text: '$$d_\\mathrm{m,i}$$ = ' + formatScientific(d_i * 1e9) + ' nm',
                     showarrow: true,
                     arrowhead: 2,
                     arrowsize: 1,
@@ -162,8 +172,8 @@ async function calculateDMA() {
                 },
                 {
                     x: d_o * 1e9,
-                    y: Q_sh / Q_a,
-                    text: '$d_\\mathrm{m,o}$ = ' + formatScientific(d_o * 1e9) + ' nm',
+                    y: Q_sh_result / Q_a,
+                    text: '$$d_\\mathrm{m,o}$$ = ' + formatScientific(d_o * 1e9) + ' nm',
                     showarrow: true,
                     arrowhead: 2,
                     arrowsize: 1,
@@ -177,9 +187,13 @@ async function calculateDMA() {
             ]
         };
         
-        // Add MathJax config to enable LaTeX rendering
+        // Configuration for MathJax rendering
         const config = {
-            mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_SVG'
+            tex2jax: {
+                inlineMath: [['$$', '$$']],
+                displayMath: [['$$', '$$']]
+            },
+            responsive: true
         };
 
         Plotly.newPlot('plot', traces, layout, config);
