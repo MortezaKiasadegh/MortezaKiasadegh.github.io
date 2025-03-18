@@ -1,5 +1,3 @@
-let pyodide = null;
-
 async function initializePyodide() {
     if (!pyodide) {
         pyodide = await loadPyodide();
@@ -126,7 +124,7 @@ async function calculateDMA() {
             title: 'DMA Operational Range',
             xaxis: {
                 title: {
-                    text: 'Mobility diameter, $d_{\\mathrm{m}}$ (nm)',
+                    text: 'Mobility diameter, $d_\\mathrm{m}$ (nm)',
                     font: {
                         size: 14
                     }
@@ -137,7 +135,7 @@ async function calculateDMA() {
             },
             yaxis: {
                 title: {
-                    text: '$R_{\\mathrm{B}}$',
+                    text: '$R_\\mathrm{B}$',
                     font: {
                         size: 14
                     }
@@ -151,7 +149,7 @@ async function calculateDMA() {
                 {
                     x: d_i * 1e9,
                     y: Q_sh / Q_a,
-                    text: `$d_{\\mathrm{m,l}}$ = ${formatScientific(d_i * 1e9)} nm`,
+                    text: '$d_\\mathrm{m,i}$ = ' + formatScientific(d_i * 1e9) + ' nm',
                     showarrow: true,
                     arrowhead: 2,
                     arrowsize: 1,
@@ -165,7 +163,7 @@ async function calculateDMA() {
                 {
                     x: d_o * 1e9,
                     y: Q_sh / Q_a,
-                    text: `$d_{\\mathrm{m,u}}$ = ${formatScientific(d_o * 1e9)} nm`,
+                    text: '$d_\\mathrm{m,o}$ = ' + formatScientific(d_o * 1e9) + ' nm',
                     showarrow: true,
                     arrowhead: 2,
                     arrowsize: 1,
@@ -259,4 +257,4 @@ async function calculateCPMA() {
 }
 
 // Calculate initial plot on page load
-document.addEventListener('DOMContentLoaded', calculateDMA); 
+document.addEventListener('DOMContentLoaded', calculateDMA);
