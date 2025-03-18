@@ -134,26 +134,27 @@ async function calculateDMA() {
                 type: 'log',
                 showgrid: true,
                 gridwidth: 1,
-                range: [0, 3],  // log10 range for x-axis [1 to 1000 nm]
-                tickformat: '.0f'
+                range: [1, 3],  // log10 range: 10^1 to 10^3 nm
+                dtick: 1,       // One tick per power of 10
+                ticktext: ['10', '100', '1000'],
+                tickvals: [1, 2, 3]
             },
             yaxis: {
                 title: 'R_B',
                 type: 'log',
                 showgrid: true,
                 gridwidth: 1,
-                range: [0, 2],  // log10 range for y-axis [1 to 100]
-                tickformat: '.0f'
+                range: [0, 2],  // log10 range: 10^0 to 10^2
+                dtick: 1,       // One tick per power of 10
+                ticktext: ['1', '10', '100'],
+                tickvals: [0, 1, 2]
             },
             showlegend: true,
             legend: {
-                x: 0.7,          // Position legend inside the plot
-                y: 0.9,          // Near the top
-                xanchor: 'left', // Align left side of legend
-                yanchor: 'top',  // Align top of legend
-                bgcolor: 'rgba(255, 255, 255, 0.8)',  // Semi-transparent background
-                bordercolor: 'rgba(0, 0, 0, 0.2)',
-                borderwidth: 1
+                x: 0.7,
+                y: 0.9,
+                xanchor: 'left',
+                yanchor: 'top'
             },
             annotations: [
                 {
@@ -195,9 +196,9 @@ async function calculateDMA() {
             }
         };
         
-        // Add MathJax config to enable LaTeX rendering
         const config = {
-            mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_SVG'
+            displayModeBar: true,
+            responsive: true
         };
 
         console.log('Plotting...');
