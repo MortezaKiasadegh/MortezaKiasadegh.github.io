@@ -130,26 +130,20 @@ async function calculateDMA() {
         const layout = {
             title: 'DMA Operational Range',
             xaxis: {
-                title: {
-                    text: 'Mobility diameter, d_m (nm)',
-                    font: {
-                        size: 14
-                    }
-                },
+                title: 'Mobility diameter, d_m (nm)',
                 type: 'log',
                 showgrid: true,
-                gridwidth: 1
+                gridwidth: 1,
+                range: [0, 3],  // log10 range for x-axis [1 to 1000 nm]
+                tickformat: '.0f'
             },
             yaxis: {
-                title: {
-                    text: 'R_B',
-                    font: {
-                        size: 14
-                    }
-                },
+                title: 'R_B',
                 type: 'log',
                 showgrid: true,
-                gridwidth: 1
+                gridwidth: 1,
+                range: [0, 2],  // log10 range for y-axis [1 to 100]
+                tickformat: '.0f'
             },
             showlegend: true,
             annotations: [
@@ -181,7 +175,15 @@ async function calculateDMA() {
                         color: 'blue'
                     }
                 }
-            ]
+            ],
+            width: 800,
+            height: 600,
+            margin: {
+                l: 80,
+                r: 50,
+                t: 50,
+                b: 80
+            }
         };
         
         // Add MathJax config to enable LaTeX rendering
