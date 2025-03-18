@@ -23,14 +23,9 @@ async function initializePyodide() {
 
 async function calculateDMA() {
     try {
-        console.log('Starting calculation...');
-        
         await initializePyodide();
         
         const Q_a = parseFloat(document.getElementById('qa').value) / 60000;
-        const Q_sh = parseFloat(document.getElementById('qsh').value) / 60000;
-        
-        console.log('Q_a:', Q_a, 'Q_sh:', Q_sh);
         
         const result = await pyodide.runPythonAsync(`
             def calculate_DMA(Q_a):
@@ -130,37 +125,33 @@ async function calculateDMA() {
         const layout = {
             title: 'DMA Operational Range',
             xaxis: {
-                title: 'Mobility diameter, d_m (nm)',
+                title: {
+                    text: 'Mobility diameter, $d_{\\mathrm{m}}$ (nm)',
+                    font: {
+                        size: 14
+                    }
+                },
                 type: 'log',
                 showgrid: true,
-                gridwidth: 1,
-                range: [1, 3],  // log10 range: 10^1 to 10^3 nm
-                dtick: 1,       // One tick per power of 10
-                ticktext: ['10', '100', '1000'],
-                tickvals: [1, 2, 3]
+                gridwidth: 1
             },
             yaxis: {
-                title: 'R_B',
+                title: {
+                    text: '$R_{\\mathrm{B}}$',
+                    font: {
+                        size: 14
+                    }
+                },
                 type: 'log',
                 showgrid: true,
-                gridwidth: 1,
-                range: [0, 2],  // log10 range: 10^0 to 10^2
-                dtick: 1,       // One tick per power of 10
-                ticktext: ['1', '10', '100'],
-                tickvals: [0, 1, 2]
+                gridwidth: 1
             },
             showlegend: true,
-            legend: {
-                x: 0.7,
-                y: 0.9,
-                xanchor: 'left',
-                yanchor: 'top'
-            },
             annotations: [
                 {
                     x: d_i * 1e9,
                     y: Q_sh / Q_a,
-                    text: 'd_m,i = ' + formatScientific(d_i * 1e9) + ' nm',
+                    text: `$d_{\\mathrm{m,l}}$ = ${formatScientific(d_i * 1e9)} nm`,
                     showarrow: true,
                     arrowhead: 2,
                     arrowsize: 1,
@@ -174,7 +165,7 @@ async function calculateDMA() {
                 {
                     x: d_o * 1e9,
                     y: Q_sh / Q_a,
-                    text: 'd_m,o = ' + formatScientific(d_o * 1e9) + ' nm',
+                    text: `$d_{\\mathrm{m,u}}$ = ${formatScientific(d_o * 1e9)} nm`,
                     showarrow: true,
                     arrowhead: 2,
                     arrowsize: 1,
@@ -185,28 +176,18 @@ async function calculateDMA() {
                         color: 'blue'
                     }
                 }
-            ],
-            width: 800,
-            height: 600,
-            margin: {
-                l: 80,
-                r: 50,
-                t: 50,
-                b: 80
-            }
+            ]
         };
         
+        // Add MathJax config to enable LaTeX rendering
         const config = {
-            displayModeBar: true,
-            responsive: true
+            mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_SVG'
         };
 
-        console.log('Plotting...');
         Plotly.newPlot('plot', traces, layout, config);
-        console.log('Plot complete');
     } catch (error) {
-        console.error('Detailed error:', error);
-        alert('An error occurred: ' + error.message);
+        console.error('Error in calculateDMA:', error);
+        alert('An error occurred during calculation. Please check the console for details.');
     }
 }
 
