@@ -232,12 +232,41 @@ async function calculateAAC() {
     const layout = {
         title: 'AAC Operational Range',
         xaxis: {
-            title: 'Particle diameter (nm)',
-            type: 'log'
+            title: {
+                text: 'Aerodynamic diameter, d_a (nm)',
+                font: { size: 14 }
+            },
+            type: 'log',
+            showgrid: true,
+            gridwidth: 1,
+            range: [1, 3],  // 10 to 1000 nm
+            dtick: 1
         },
         yaxis: {
-            title: 'R_t',
-            type: 'log'
+            title: {
+                text: 'R_τ',
+                font: { size: 14 }
+            },
+            type: 'log',
+            showgrid: true,
+            gridwidth: 1,
+            range: [0, 2],  // 1 to 100
+            dtick: 1
+        },
+        showlegend: true,
+        legend: {
+            x: 0.7,
+            y: 0.9,
+            xanchor: 'left',
+            yanchor: 'top'
+        },
+        width: 800,
+        height: 600,
+        margin: {
+            l: 80,
+            r: 50,
+            t: 50,
+            b: 80
         }
     };
     
@@ -279,3 +308,63 @@ async function calculateCPMA() {
 
 // Calculate initial plot on page load
 document.addEventListener('DOMContentLoaded', calculateDMA); 
+
+// Modify the bisection method to handle the AAC equations better
+function bisectionMethod(func, a, b, tolerance = 1e-10, maxIterations = 100) {
+    try {
+        let fa = func(a);
+        let fb = func(b);
+        
+        for (let i = 0; i < maxIterations; i++) {
+            let c = (a + b) / 2;
+            let fc = func(c);
+            
+            if (Math.abs(fc) < tolerance) {
+                return c;
+            }
+            
+            if (fa * fc < 0) {
+                b = c;
+                fb = fc;
+            } else {
+                a = c;
+                fa = fc;
+            }
+        }
+        
+        return (a + b) / 2;
+    } catch (error) {
+        console.error('Error in bisectionMethod:', error);
+        throw error;
+    }
+}
+
+// Update the calculation of factors
+const factor1 = (36 * mu) / (Math.PI * 1000 * Math.pow(r_1 + r_2, 2) * L * Math.pow(w_lb_i, 2));
+const factor2 = (36 * mu) / (Math.PI * 1000 * Math.pow(r_1 + r_2, 2) * L * Math.pow(w_ub_i, 2));
+
+// Modify the root finding functions
+const d_min = Q_sh_spa.map(Q_sh_val => {
+    const f = d => Math.pow(d, 2) * Cc(d, P, T) - (factor2 * Q_sh_val);
+    try {
+        return bisectionMethod(f, 1e-9, 1e-7);
+    } catch (error) {
+        console.error('Error finding d_min:', error);
+        return null;
+    }
+});
+
+const d_max = Q_sh_spa.map(Q_sh_val => {
+    const f = d => Math.pow(d, 2) * Cc(d, P, T) - (factor1 * Q_sh_val);
+    try {
+        return bisectionMethod(f, 1e-7, 1e-5);
+    } catch (error) {
+        console.error('Error finding d_max:', error);
+        return null;
+    }
+});
+
+// Add error checking before plotting
+if (d_min.includes(null) || d_max.includes(null)) {
+    throw new Error('Failed to calculate some diameter values');
+} 
