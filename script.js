@@ -25,7 +25,7 @@ async function calculateDMA() {
     try {
         await initializePyodide();
         
-        const Q_a = parseFloat(document.getElementById('dma-qa').value);
+        const Q_a = parseFloat(document.getElementById('qa').value) / 60000;
         
         const result = await pyodide.runPythonAsync(`
             def calculate_DMA(Q_a):
@@ -123,7 +123,7 @@ async function calculateDMA() {
             showlegend: true
         };
         
-        Plotly.newPlot('dma-plot', traces, layout);
+        Plotly.newPlot('plot', traces, layout);
     } catch (error) {
         console.error('Error in calculateDMA:', error);
         alert('An error occurred during calculation. Please check the console for details.');
@@ -195,4 +195,7 @@ async function calculateCPMA() {
     };
     
     Plotly.newPlot('cpma-plot', [trace], layout);
-} 
+}
+
+// Calculate initial plot on page load
+document.addEventListener('DOMContentLoaded', calculateDMA); 
