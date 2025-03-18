@@ -146,6 +146,15 @@ async function calculateDMA() {
                 tickformat: '.0f'
             },
             showlegend: true,
+            legend: {
+                x: 0.7,          // Position legend inside the plot
+                y: 0.9,          // Near the top
+                xanchor: 'left', // Align left side of legend
+                yanchor: 'top',  // Align top of legend
+                bgcolor: 'rgba(255, 255, 255, 0.8)',  // Semi-transparent background
+                bordercolor: 'rgba(0, 0, 0, 0.2)',
+                borderwidth: 1
+            },
             annotations: [
                 {
                     x: d_i * 1e9,
