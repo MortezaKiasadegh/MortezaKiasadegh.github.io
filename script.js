@@ -130,7 +130,7 @@ async function calculateDMA() {
             title: 'DMA Operational Range',
             xaxis: {
                 title: {
-                    text: 'Mobility diameter, $D_{\\mathrm{m}}$ (nm)',
+                    text: 'Mobility diameter, $d_{\\mathrm{m}}$ (nm)',
                     font: {
                         size: 14
                     }
@@ -155,7 +155,7 @@ async function calculateDMA() {
                 {
                     x: d_i * 1e9,
                     y: Q_sh / Q_a,
-                    text: `d_i = ${formatScientific(d_i * 1e9)} nm`,
+                    text: `$d_{\\mathrm{m,l}}$ = ${formatScientific(d_i * 1e9)} nm`,
                     showarrow: true,
                     arrowhead: 2,
                     arrowsize: 1,
@@ -169,7 +169,7 @@ async function calculateDMA() {
                 {
                     x: d_o * 1e9,
                     y: Q_sh / Q_a,
-                    text: `d_o = ${formatScientific(d_o * 1e9)} nm`,
+                    text: `$d_{\\mathrm{m,u}}$ = ${formatScientific(d_o * 1e9)} nm`,
                     showarrow: true,
                     arrowhead: 2,
                     arrowsize: 1,
