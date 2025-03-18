@@ -60,66 +60,56 @@
     </div>
     <script>
         function Cc(d, P, T) {
-            try {
-                const alpha = 1.165 * 2;
-                const beta = 0.483 * 2;
-                const gamma = 0.997 / 2;
-                const la = 67.30e-9;
-                
-                const lap = la * Math.pow(T / 296.15, 2) * (101325/P) * ((110.4 + 296.15) / (T + 110.4));
-                
-                return 1 + (lap / d) * (alpha + beta * Math.exp(-gamma * d / lap));
-            } catch (error) {
-                console.error('Error in Cc:', error);
-                throw error;
-            }
+            const alpha = 1.165 * 2;
+            const beta = 0.483 * 2;
+            const gamma = 0.997 / 2;
+            const la = 67.30e-9;
+            
+            const lap = la * Math.pow(T / 296.15, 2) * (101325/P) * ((110.4 + 296.15) / (T + 110.4));
+            
+            return 1 + (lap / d) * (alpha + beta * Math.exp(-gamma * d / lap));
         }
 
         function bisectionMethod(func, a, b, tolerance = 1e-10, maxIterations = 100) {
-            try {
-                let fa = func(a);
-                let fb = func(b);
-                
-                if (fa * fb > 0) {
-                    throw new Error('Initial points do not bracket the root');
-                }
-                
-                for (let i = 0; i < maxIterations; i++) {
-                    let c = (a + b) / 2;
-                    let fc = func(c);
-                    
-                    if (Math.abs(fc) < tolerance) {
-                        return c;
-                    }
-                    
-                    if (fa * fc < 0) {
-                        b = c;
-                        fb = fc;
-                    } else {
-                        a = c;
-                        fa = fc;
-                    }
-                }
-                
-                return (a + b) / 2;
-            } catch (error) {
-                console.error('Error in bisectionMethod:', error);
-                throw error;
+            let fa = func(a);
+            let fb = func(b);
+            
+            if (fa * fb > 0) {
+                throw new Error('Initial points do not bracket the root');
             }
+            
+            for (let i = 0; i < maxIterations; i++) {
+                let c = (a + b) / 2;
+                let fc = func(c);
+                
+                if (Math.abs(fc) < tolerance) {
+                    return c;
+                }
+                
+                if (fa * fc < 0) {
+                    b = c;
+                    fb = fc;
+                } else {
+                    a = c;
+                    fa = fc;
+                }
+            }
+            
+            return (a + b) / 2;
+        }
+
+        function formatScientific(num) {
+            return num.toExponential(2);
         }
 
         function calculateDMA() {
             try {
-                console.log('Starting DMA calculation...');
-                
                 // Constants
                 const P = 101325;
                 const T = 298.15;
                 const mu = 1.81809e-5 * Math.pow(T / 293.15, 1.5) * (293.15 + 110.4) / (T + 110.4);
                 const Q_a = parseFloat(document.getElementById('qa').value) / 60000;
                 const Q_sh = parseFloat(document.getElementById('qsh').value) / 60000;
-                
-                console.log('Q_a:', Q_a);
                 
                 const Q_sh_lb = 2 / 60000;
                 const Q_sh_ub = 30 / 60000;
@@ -142,8 +132,6 @@
                 const R_B_lb = Q_sh_lb / Q_a;
                 const R_B_up = Q_sh_ub / Q_a;
 
-                console.log('Calculating d_min and d_max...');
-
                 // Calculate d_min and d_max
                 const d_min = Q_sh_spa.map(Q_sh_val => {
                     const f = d => d - (factor1 / Q_sh_val) * Cc(d, P, T);
@@ -154,8 +142,6 @@
                     const f = d => d - (factor2 / Q_sh_val) * Cc(d, P, T);
                     return bisectionMethod(f, 1e-7, 1e-5);
                 });
-
-                console.log('Plotting results...');
 
                 // Calculate specific points for input Q_sh
                 const f1 = d => d - (factor1 / Q_sh) * Cc(d, P, T);
@@ -168,35 +154,34 @@
                 const d_min_nm = d_min.map(d => d * 1e9);
                 const d_max_nm = d_max.map(d => d * 1e9);
 
-                // Create plot
                 const traces = [
                     {
                         x: d_min_nm,
                         y: R_B,
                         mode: 'lines',
-                        name: 'Lower bound',
-                        line: { color: 'red' }
+                        line: { color: 'red' },
+                        showlegend: false
                     },
                     {
                         x: d_max_nm,
                         y: R_B,
                         mode: 'lines',
-                        name: 'Upper bound',
-                        line: { color: 'red' }
+                        line: { color: 'red' },
+                        showlegend: false
                     },
                     {
                         x: [d_min_nm[0], d_max_nm[0]],
                         y: [R_B_lb, R_B_lb],
                         mode: 'lines',
-                        name: 'Lower R_B',
-                        line: { color: 'red' }
+                        line: { color: 'red' },
+                        showlegend: false
                     },
                     {
                         x: [d_min_nm[d_min_nm.length-1], d_max_nm[d_max_nm.length-1]],
                         y: [R_B_up, R_B_up],
                         mode: 'lines',
-                        name: 'Upper R_B',
-                        line: { color: 'red' }
+                        line: { color: 'red' },
+                        showlegend: false
                     },
                     {
                         x: [d_i * 1e9, d_o * 1e9],
@@ -276,7 +261,6 @@
                 };
 
                 Plotly.newPlot('plot', traces, layout, config);
-                console.log('Calculation completed successfully');
                 
             } catch (error) {
                 console.error('Error in calculateDMA:', error);
