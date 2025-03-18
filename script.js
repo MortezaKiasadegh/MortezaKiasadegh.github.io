@@ -23,9 +23,14 @@ async function initializePyodide() {
 
 async function calculateDMA() {
     try {
+        console.log('Starting calculation...');
+        
         await initializePyodide();
         
         const Q_a = parseFloat(document.getElementById('qa').value) / 60000;
+        const Q_sh = parseFloat(document.getElementById('qsh').value) / 60000;
+        
+        console.log('Q_a:', Q_a, 'Q_sh:', Q_sh);
         
         const result = await pyodide.runPythonAsync(`
             def calculate_DMA(Q_a):
@@ -126,7 +131,7 @@ async function calculateDMA() {
             title: 'DMA Operational Range',
             xaxis: {
                 title: {
-                    text: 'Mobility diameter, $d_\\mathrm{m}$ (nm)',
+                    text: 'Mobility diameter, d_m (nm)',
                     font: {
                         size: 14
                     }
@@ -137,7 +142,7 @@ async function calculateDMA() {
             },
             yaxis: {
                 title: {
-                    text: '$R_\\mathrm{B}$',
+                    text: 'R_B',
                     font: {
                         size: 14
                     }
@@ -151,7 +156,7 @@ async function calculateDMA() {
                 {
                     x: d_i * 1e9,
                     y: Q_sh / Q_a,
-                    text: '$d_\\mathrm{m,i}$ = ' + formatScientific(d_i * 1e9) + ' nm',
+                    text: 'd_m,i = ' + formatScientific(d_i * 1e9) + ' nm',
                     showarrow: true,
                     arrowhead: 2,
                     arrowsize: 1,
@@ -165,7 +170,7 @@ async function calculateDMA() {
                 {
                     x: d_o * 1e9,
                     y: Q_sh / Q_a,
-                    text: '$d_\\mathrm{m,o}$ = ' + formatScientific(d_o * 1e9) + ' nm',
+                    text: 'd_m,o = ' + formatScientific(d_o * 1e9) + ' nm',
                     showarrow: true,
                     arrowhead: 2,
                     arrowsize: 1,
@@ -184,10 +189,12 @@ async function calculateDMA() {
             mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_SVG'
         };
 
+        console.log('Plotting...');
         Plotly.newPlot('plot', traces, layout, config);
+        console.log('Plot complete');
     } catch (error) {
-        console.error('Error in calculateDMA:', error);
-        alert('An error occurred during calculation. Please check the console for details.');
+        console.error('Detailed error:', error);
+        alert('An error occurred: ' + error.message);
     }
 }
 
