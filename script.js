@@ -201,9 +201,18 @@ async function calculateAAC() {
         const P = 101325;
         const T = 298.15;
         const mu = 1.81809e-5 * Math.pow(T / 293.15, 1.5) * (293.15 + 110.4) / (T + 110.4);
-        const Q_a = parseFloat(document.getElementById('aac-qa').value) / 60000;
-        const Q_sh = parseFloat(document.getElementById('aac-qsh').value) / 60000;
         
+        // Get input values and validate them
+        const Q_a_input = parseFloat(document.getElementById('aac-qa').value);
+        const Q_sh_input = parseFloat(document.getElementById('aac-qsh').value);
+        
+        if (isNaN(Q_a_input) || isNaN(Q_sh_input)) {
+            throw new Error('Invalid input values');
+        }
+        
+        const Q_a = Q_a_input / 60000;
+        const Q_sh = Q_sh_input / 60000;
+
         // Classifier properties
         const r_1 = 56e-3;
         const r_2 = 60e-3;
@@ -214,56 +223,57 @@ async function calculateAAC() {
         const w_lb_i = 2 * Math.PI / 60 * 200;
         const w_ub_i = 2 * Math.PI / 60 * 7000;
 
-        console.log('Starting AAC calculation...'); // Debug log
-
-        // Create arrays for Q_sh values
-        const points = 50; // Reduced number of points for stability
+        // Create arrays with fewer points for stability
+        const points = 30;
         const Q_sh_spa = [];
         const R_t = [];
-        
+        const w_low = [];
+        const w_up = [];
+
+        // Calculate arrays step by step
         for (let i = 0; i < points; i++) {
+            // Logarithmic spacing for Q_sh
             const t = i / (points - 1);
-            const q = Q_sh_lb * Math.pow(Q_sh_ub/Q_sh_lb, t);
+            const q = Q_sh_lb * Math.exp(t * Math.log(Q_sh_ub / Q_sh_lb));
             Q_sh_spa.push(q);
             R_t.push(q / Q_a);
-        }
-
-        const R_t_lb = Q_sh_lb / Q_a;
-        const R_t_up = Q_sh_ub / Q_a;
-
-        // Calculate w arrays with error checking
-        const w_low = new Array(points).fill(w_lb_i);
-        const w_up = Q_sh_spa.map(Q => {
-            if (Q < Q_sh_RB) {
-                return Math.min(w_ub_i, 723.7 - 9.87 * 60000 * Q);
+            
+            // Calculate w arrays
+            w_low.push(w_lb_i);
+            if (q < Q_sh_RB) {
+                w_up.push(Math.min(w_ub_i, 723.7 - 9.87 * 60000 * q));
+            } else {
+                w_up.push(Math.min(w_ub_i, 875 - 25 * 60000 * q));
             }
-            return Math.min(w_ub_i, 875 - 25 * 60000 * Q);
-        });
+        }
 
         // Calculate factors
         const factor1 = w_low.map(w => (36 * mu) / (Math.PI * 1000 * Math.pow(r_1 + r_2, 2) * L * Math.pow(w, 2)));
         const factor2 = w_up.map(w => (36 * mu) / (Math.PI * 1000 * Math.pow(r_1 + r_2, 2) * L * Math.pow(w, 2)));
 
-        // Calculate d_min and d_max with error handling
+        // Calculate diameters using simpler numerical approach
         const d_min = [];
         const d_max = [];
 
         for (let i = 0; i < points; i++) {
-            try {
-                const f_min = d => Math.pow(d, 2) * Cc(d, P, T) - (factor2[i] * Q_sh_spa[i]);
-                const f_max = d => Math.pow(d, 2) * Cc(d, P, T) - (factor1[i] * Q_sh_spa[i]);
+            // Use simple iteration for stability
+            let d_min_val = 1e-8;
+            let d_max_val = 1e-6;
+            
+            // Simple iteration to find approximate roots
+            for (let iter = 0; iter < 20; iter++) {
+                const cc_min = Cc(d_min_val, P, T);
+                const cc_max = Cc(d_max_val, P, T);
                 
-                d_min.push(bisectionMethod(f_min, 1e-9, 1e-7));
-                d_max.push(bisectionMethod(f_max, 1e-7, 1e-5));
-            } catch (error) {
-                console.error(`Error at point ${i}:`, error);
-                // Use previous valid values or defaults
-                d_min.push(d_min[i-1] || 1e-8);
-                d_max.push(d_max[i-1] || 1e-6);
+                d_min_val = Math.sqrt((factor2[i] * Q_sh_spa[i]) / cc_min);
+                d_max_val = Math.sqrt((factor1[i] * Q_sh_spa[i]) / cc_max);
             }
+            
+            d_min.push(d_min_val);
+            d_max.push(d_max_val);
         }
 
-        // Create plot with basic traces first
+        // Create plot
         const traces = [
             {
                 x: d_min.map(d => d * 1e9),
@@ -289,7 +299,8 @@ async function calculateAAC() {
                     font: { size: 14 }
                 },
                 type: 'log',
-                showgrid: true
+                showgrid: true,
+                range: [0.5, 3.5] // log10 range
             },
             yaxis: {
                 title: {
@@ -297,7 +308,8 @@ async function calculateAAC() {
                     font: { size: 14 }
                 },
                 type: 'log',
-                showgrid: true
+                showgrid: true,
+                range: [0, 2] // log10 range
             },
             showlegend: true
         };
@@ -306,7 +318,6 @@ async function calculateAAC() {
 
     } catch (error) {
         console.error('Error in calculateAAC:', error);
-        console.error('Error stack:', error.stack);
         alert('An error occurred during AAC calculation. Please check the console for details.');
     }
 }
