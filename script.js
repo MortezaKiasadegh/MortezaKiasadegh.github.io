@@ -214,12 +214,16 @@ async function calculateAAC() {
         const w_lb_i = 2 * Math.PI / 60 * 200;
         const w_ub_i = 2 * Math.PI / 60 * 7000;
 
-        // Create arrays for Q_sh values
+        console.log('Starting AAC calculation...'); // Debug log
+
+        // Create arrays for Q_sh values using logarithmic spacing
         const points = 100;
-        const Q_sh_spa = Array.from({length: points}, (_, i) => {
+        const Q_sh_spa = [];
+        for (let i = 0; i < points; i++) {
             const t = i / (points - 1);
-            return Math.pow(10, Math.log10(Q_sh_lb) * (1-t) + Math.log10(Q_sh_ub) * t);
-        });
+            Q_sh_spa.push(Q_sh_lb * Math.pow(Q_sh_ub/Q_sh_lb, t));
+        }
+
         const R_t = Q_sh_spa.map(q => q / Q_a);
         const R_t_lb = Q_sh_lb / Q_a;
         const R_t_up = Q_sh_ub / Q_a;
@@ -234,19 +238,27 @@ async function calculateAAC() {
             }
         });
 
+        // Calculate factors
         const factor1 = w_low.map(w => (36 * mu) / (Math.PI * 1000 * Math.pow(r_1 + r_2, 2) * L * Math.pow(w, 2)));
         const factor2 = w_up.map(w => (36 * mu) / (Math.PI * 1000 * Math.pow(r_1 + r_2, 2) * L * Math.pow(w, 2)));
 
-        // Calculate d_min and d_max
-        const d_min = Q_sh_spa.map((Q_sh_val, i) => {
-            const f = d => Math.pow(d, 2) * Cc(d, P, T) - (factor2[i] * Q_sh_val);
-            return bisectionMethod(f, 1e-9, 1e-7);
-        });
+        console.log('Calculating d_min and d_max...'); // Debug log
 
-        const d_max = Q_sh_spa.map((Q_sh_val, i) => {
-            const f = d => Math.pow(d, 2) * Cc(d, P, T) - (factor1[i] * Q_sh_val);
-            return bisectionMethod(f, 1e-7, 1e-5);
-        });
+        // Calculate d_min and d_max
+        const d_min = [];
+        const d_max = [];
+        
+        for (let i = 0; i < points; i++) {
+            const f_min = d => Math.pow(d, 2) * Cc(d, P, T) - (factor2[i] * Q_sh_spa[i]);
+            const f_max = d => Math.pow(d, 2) * Cc(d, P, T) - (factor1[i] * Q_sh_spa[i]);
+            
+            try {
+                d_min.push(bisectionMethod(f_min, 1e-9, 1e-7));
+                d_max.push(bisectionMethod(f_max, 1e-7, 1e-5));
+            } catch (error) {
+                console.error(`Error at point ${i}:`, error);
+            }
+        }
 
         // Calculate specific points for input Q_sh
         const idx = Q_sh_spa.findIndex(q => Math.abs(q - Q_sh) < Q_sh * 0.01);
@@ -258,6 +270,8 @@ async function calculateAAC() {
             d => Math.pow(d, 2) * Cc(d, P, T) - (factor1[idx] * Q_sh),
             1e-7, 1e-5
         );
+
+        console.log('Creating plot...'); // Debug log
 
         // Create plot
         const traces = [
@@ -322,11 +336,9 @@ async function calculateAAC() {
             grid: { pattern: 'independent' }
         };
 
-        const config = {
-            mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_SVG'
-        };
+        console.log('Plotting...'); // Debug log
 
-        Plotly.newPlot('aac-plot', traces, layout, config);
+        Plotly.newPlot('aac-plot', traces, layout);
 
     } catch (error) {
         console.error('Error in calculateAAC:', error);
