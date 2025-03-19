@@ -335,37 +335,149 @@ async function calculateAAC() {
 }
 
 async function calculateCPMA() {
-    await initializePyodide();
-    
-    const Q_a = parseFloat(document.getElementById('cpma-qa').value);
-    
-    const result = await pyodide.runPythonAsync(`calculate_CPMA(${Q_a})`);
-    
-    const trace = {
-        x: [result.d_min, result.d_max],
-        y: [result.R_m, result.R_m],
-        mode: 'lines',
-        name: 'CPMA Range',
-        line: {
-            color: 'green',
-            width: 2
+    try {
+        // Constants
+        const P = 101325;
+        const T = 298.15;
+        const mu = 1.81809e-5 * Math.pow(T / 293.15, 1.5) * (293.15 + 110.4) / (T + 110.4);
+        const Q_a = parseFloat(document.getElementById('cpma-qa').value) / 60000;
+        const R_m_inp = parseFloat(document.getElementById('cpma-rm').value);
+
+        // Classifier parameters
+        const r_1 = 60e-3;
+        const r_2 = 61e-3;
+        const r_c = 60.5e-3;
+        const L = 0.2;
+        const e = 1.6e-19;
+        const V_min = 0.1;
+        const V_max = 1000;
+        const w_lb_i = 2 * Math.PI / 60 * 200;
+        const w_ub_i = 2 * Math.PI / 60 * 12000;
+        const k = 1000 * Math.PI / 6;
+        const D_m = 3;
+
+        // Create R_m array
+        const points = 100;
+        const R_m_spa = Array.from({length: points}, (_, i) => {
+            const t = i / (points - 1);
+            return Math.pow(10, Math.log10(0.001) * (1-t) + Math.log10(200) * t);
+        });
+
+        // Precompute factors
+        const log_r_ratio = Math.log(r_2 / r_1);
+        const factor1 = e * V_min / (k * Math.pow(r_c, 2) * log_r_ratio);
+        const factor2 = e * V_max / (k * Math.pow(r_c, 2) * log_r_ratio);
+        const factor3 = 3 * mu * Q_a / (2 * k * Math.pow(r_c, 2) * L);
+
+        // Residual function for optimization
+        function residual(d, R_m_val, factor_v, is_min) {
+            const d_m_max = Math.pow((R_m_val + 1) / R_m_val, 1 / D_m) * d;
+            const factor = factor_v === 'min' ? factor1 : factor2;
+            
+            const w_guess = Math.sqrt(factor / Math.pow(d, D_m));
+            const w = Math.min(Math.max(w_guess, w_lb_i), w_ub_i);
+            
+            return (Math.pow(d, D_m) - Math.pow(d_m_max, D_m) + 
+                   (factor3 / Math.pow(w, 2)) * (d_m_max / Cc(d_m_max, P, T))) / 
+                   Math.abs(Math.pow(d, D_m));
         }
-    };
-    
-    const layout = {
-        title: 'CPMA Operational Range',
-        xaxis: {
-            title: 'Particle diameter (nm)',
-            type: 'log'
-        },
-        yaxis: {
-            title: 'R_m',
-            type: 'log'
+
+        // Function to find root using bisection
+        function findRoot(R_m_val, factor_v, is_min, lower, upper) {
+            const f = d => residual(d, R_m_val, factor_v, is_min);
+            return bisectionMethod(f, lower, upper);
         }
-    };
-    
-    Plotly.newPlot('cpma-plot', [trace], layout);
+
+        // Calculate boundaries for input R_m
+        const d_i_1 = findRoot(R_m_inp, 'min', true, 1e-9, 1e-7);
+        const d_o_1 = findRoot(R_m_inp, 'min', false, 1e-7, 1e-5);
+        const d_i_2 = findRoot(R_m_inp, 'max', true, 1e-9, 1e-7);
+        const d_o_2 = findRoot(R_m_inp, 'max', false, 1e-7, 1e-5);
+
+        const d_i = Math.max(d_i_1, d_i_2);
+        const d_o = Math.min(d_o_1, d_o_2);
+
+        // Calculate boundaries for R_m sweep
+        const d_min_1 = R_m_spa.map(R_m => findRoot(R_m, 'min', true, 1e-9, 1e-7));
+        const d_max_1 = R_m_spa.map(R_m => findRoot(R_m, 'min', false, 1e-7, 1e-5));
+        const d_min_2 = R_m_spa.map(R_m => findRoot(R_m, 'max', true, 1e-9, 1e-7));
+        const d_max_2 = R_m_spa.map(R_m => findRoot(R_m, 'max', false, 1e-7, 1e-5));
+
+        // Combine results
+        const d_min = d_min_1.map((d, i) => Math.max(d, d_min_2[i]));
+        const d_max = d_max_1.map((d, i) => Math.min(d, d_max_2[i]));
+
+        // Filter valid points
+        const valid_points = d_min.map((d, i) => ({
+            d_min: d,
+            d_max: d_max[i],
+            R_m: R_m_spa[i]
+        })).filter(p => Math.abs(p.d_min - p.d_max) > 1e-8);
+
+        // Create plot
+        const traces = [
+            {
+                x: valid_points.map(p => p.d_min * 1e9),
+                y: valid_points.map(p => p.R_m),
+                mode: 'lines',
+                name: 'Lower bound',
+                line: { color: 'red' }
+            },
+            {
+                x: valid_points.map(p => p.d_max * 1e9),
+                y: valid_points.map(p => p.R_m),
+                mode: 'lines',
+                name: 'Upper bound',
+                line: { color: 'red' }
+            },
+            {
+                x: [d_i * 1e9, d_o * 1e9],
+                y: [R_m_inp, R_m_inp],
+                mode: 'lines',
+                name: 'Selected R_m',
+                line: { color: 'green' }
+            }
+        ];
+
+        const layout = {
+            title: 'CPMA Operational Range',
+            xaxis: {
+                title: {
+                    text: 'Mobility diameter, $d_{\\mathrm{m}}$ (nm)',
+                    font: { size: 14 }
+                },
+                type: 'log',
+                showgrid: true,
+                gridwidth: 1
+            },
+            yaxis: {
+                title: {
+                    text: '$R_{\\mathrm{m}}$',
+                    font: { size: 14 }
+                },
+                type: 'log',
+                showgrid: true,
+                gridwidth: 1
+            },
+            showlegend: true,
+            grid: { pattern: 'independent' }
+        };
+
+        const config = {
+            mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_SVG'
+        };
+
+        Plotly.newPlot('cpma-plot', traces, layout, config);
+
+    } catch (error) {
+        console.error('Error in calculateCPMA:', error);
+        alert('An error occurred during CPMA calculation. Please check the console for details.');
+    }
 }
 
 // Calculate initial plot on page load
-document.addEventListener('DOMContentLoaded', calculateDMA); 
+document.addEventListener('DOMContentLoaded', () => {
+    calculateDMA();
+    calculateAAC();
+    calculateCPMA();
+}); 
