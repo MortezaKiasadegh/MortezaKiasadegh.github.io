@@ -288,8 +288,204 @@
             }
         }
 
+        async function calculateAAC() {
+            try {
+                // Constants
+                const P = 101325;
+                const T = 298.15;
+                const mu = 1.81809e-5 * Math.pow(T / 293.15, 1.5) * (293.15 + 110.4) / (T + 110.4);
+                const Q_a = parseFloat(document.getElementById('aac-qa').value) / 60000;
+                const Q_sh = parseFloat(document.getElementById('aac-qsh').value) / 60000;
+
+                // AAC Properties
+                const r_1 = 56e-3;
+                const r_2 = 60e-3;
+                const L = 0.206;
+                const Q_sh_lb = 2 / 60000;
+                const Q_sh_ub = 15 / 60000;
+                const w_lb_i = 2 * Math.PI / 60 * 200;
+                const w_ub_i = 2 * Math.PI / 60 * 7000;
+
+                const points = 100;
+                const Q_sh_spa = Array.from({length: points}, (_, i) => {
+                    const t = i / (points - 1);
+                    return Q_sh_lb * Math.pow(Q_sh_ub / Q_sh_lb, t);
+                });
+
+                const R_t = Q_sh_spa.map(q => q / Q_a);
+                const R_t_lb = Q_sh_lb / Q_a;
+                const R_t_up = Q_sh_ub / Q_a;
+
+                const w_low = Array(points).fill(w_lb_i);
+                const w_up = Q_sh_spa.map(Q => (Q < 10 / 60000) ? 
+                    Math.min(w_ub_i, 723.7 - 9.87 * 60000 * Q) :
+                    Math.min(w_ub_i, 875 - 25 * 60000 * Q)
+                );
+
+                const factor1 = w_low.map(w => (36 * mu) / (Math.PI * 1000 * Math.pow(r_1 + r_2, 2) * L * Math.pow(w, 2)));
+                const factor2 = w_up.map(w => (36 * mu) / (Math.PI * 1000 * Math.pow(r_1 + r_2, 2) * L * Math.pow(w, 2)));
+
+                const d_min = [];
+                const d_max = [];
+
+                for (let i = 0; i < points; i++) {
+                    const f_min = d => Math.pow(d, 2) * Cc(d, P, T) - (factor2[i] * Q_sh_spa[i]);
+                    const f_max = d => Math.pow(d, 2) * Cc(d, P, T) - (factor1[i] * Q_sh_spa[i]);
+                    d_min.push(bisectionMethod(f_min, 1e-9, 1e-7));
+                    d_max.push(bisectionMethod(f_max, 1e-7, 1e-5));
+                }
+
+                // Trapezoid region (polygon points)
+                const trapezoid_x = [
+                    d_min[0] * 1e9, d_max[0] * 1e9,
+                    d_max[d_max.length - 1] * 1e9, d_min[d_min.length - 1] * 1e9,
+                    d_min[0] * 1e9 // close the polygon
+                ];
+                const trapezoid_y = [
+                    R_t_lb, R_t_lb,
+                    R_t_up, R_t_up,
+                    R_t_lb // close the polygon
+                ];
+
+                const traces = [
+                    {
+                        x: d_min.map(d => d * 1e9),
+                        y: R_t,
+                        mode: 'lines',
+                        name: 'Lower Bound',
+                        line: { color: 'red' }
+                    },
+                    {
+                        x: d_max.map(d => d * 1e9),
+                        y: R_t,
+                        mode: 'lines',
+                        name: 'Upper Bound',
+                        line: { color: 'red' }
+                    },
+                    {
+                        x: trapezoid_x,
+                        y: trapezoid_y,
+                        fill: 'toself',
+                        fillcolor: 'rgba(255, 0, 0, 0.2)',
+                        line: { color: 'rgba(255,0,0,0.5)' },
+                        type: 'scatter',
+                        name: 'AAC Trapezoidal'
+                    }
+                ];
+
+                const layout = {
+                    title: 'AAC Operational Range (Trapezoidal)',
+                    xaxis: { title: 'Aerodynamic Diameter (nm)', type: 'log' },
+                    yaxis: { title: 'Rτ', type: 'log' },
+                    showlegend: true
+                };
+
+                Plotly.newPlot('aac-plot', traces, layout);
+
+            } catch (error) {
+                console.error('Error in calculateAAC:', error);
+            }
+        }
+
+        async function calculateCPMA() {
+            try {
+                const P = 101325;
+                const T = 298.15;
+                const mu = 1.81809e-5 * Math.pow(T / 293.15, 1.5) * (293.15 + 110.4) / (T + 110.4);
+                const Q_a = parseFloat(document.getElementById('cpma-qa').value) / 60000;
+
+                const r_1 = 60e-3, r_2 = 61e-3, r_c = 60.5e-3;
+                const L = 0.2;
+                const e = 1.6e-19;
+                const V_min = 0.1, V_max = 1000;
+                const w_lb_i = 2 * Math.PI / 60 * 200;
+                const w_ub_i = 2 * Math.PI / 60 * 12000;
+                const k = 1000 * Math.PI / 6;
+                const D_m = 3;
+
+                const points = 100;
+                const R_m_spa = Array.from({ length: points }, (_, i) => {
+                    const t = i / (points - 1);
+                    return Math.pow(10, Math.log10(0.001) * (1 - t) + Math.log10(200) * t);
+                });
+
+                const log_r_ratio = Math.log(r_2 / r_1);
+                const factor1 = e * V_min / (k * Math.pow(r_c, 2) * log_r_ratio);
+                const factor2 = e * V_max / (k * Math.pow(r_c, 2) * log_r_ratio);
+                const factor3 = 3 * mu * Q_a / (2 * k * Math.pow(r_c, 2) * L);
+
+                const d_min = [];
+                const d_max = [];
+
+                for (let i = 0; i < points; i++) {
+                    const R_m = R_m_spa[i];
+                    const d_m_max = Math.pow((R_m + 1) / R_m, 1 / D_m) * 1e-9; // starting point
+                    const f_min = d => (Math.pow(d, D_m) - Math.pow(d_m_max, D_m) + 
+                                    (factor3 / Math.pow(w_lb_i, 2)) * (d_m_max / Cc(d_m_max, P, T))) /
+                                    Math.abs(Math.pow(d, D_m));
+                    const f_max = d => (Math.pow(d, D_m) - Math.pow(d_m_max, D_m) + 
+                                    (factor3 / Math.pow(w_ub_i, 2)) * (d_m_max / Cc(d_m_max, P, T))) /
+                                    Math.abs(Math.pow(d, D_m));
+                    d_min.push(bisectionMethod(f_min, 1e-9, 1e-7));
+                    d_max.push(bisectionMethod(f_max, 1e-7, 1e-5));
+                }
+
+                const trapezoid_x = [
+                    d_min[0] * 1e9, d_max[0] * 1e9,
+                    d_max[d_max.length - 1] * 1e9, d_min[d_min.length - 1] * 1e9,
+                    d_min[0] * 1e9
+                ];
+                const trapezoid_y = [
+                    R_m_spa[0], R_m_spa[0],
+                    R_m_spa[R_m_spa.length - 1], R_m_spa[R_m_spa.length - 1],
+                    R_m_spa[0]
+                ];
+
+                const traces = [
+                    {
+                        x: d_min.map(d => d * 1e9),
+                        y: R_m_spa,
+                        mode: 'lines',
+                        name: 'Lower Bound',
+                        line: { color: 'blue' }
+                    },
+                    {
+                        x: d_max.map(d => d * 1e9),
+                        y: R_m_spa,
+                        mode: 'lines',
+                        name: 'Upper Bound',
+                        line: { color: 'blue' }
+                    },
+                    {
+                        x: trapezoid_x,
+                        y: trapezoid_y,
+                        fill: 'toself',
+                        fillcolor: 'rgba(0, 0, 255, 0.2)',
+                        line: { color: 'rgba(0,0,255,0.5)' },
+                        type: 'scatter',
+                        name: 'CPMA Trapezoidal'
+                    }
+                ];
+
+                const layout = {
+                    title: 'CPMA Operational Range (Trapezoidal)',
+                    xaxis: { title: 'Mobility Diameter (nm)', type: 'log' },
+                    yaxis: { title: 'R_m', type: 'log' },
+                    showlegend: true
+                };
+
+                Plotly.newPlot('cpma-plot', traces, layout);
+
+            } catch (error) {
+                console.error('Error in calculateCPMA:', error);
+            }
+        }
+
+
         // Calculate initial plot when page loads
         document.addEventListener('DOMContentLoaded', calculateDMA);
+        document.addEventListener('DOMContentLoaded', calculateAAC);
+        document.addEventListener('DOMContentLoaded', calculateCPMA);
     </script>
 </body>
 </html> 
