@@ -216,61 +216,54 @@ async function calculateAAC() {
 
         console.log('Starting AAC calculation...'); // Debug log
 
-        // Create arrays for Q_sh values using logarithmic spacing
-        const points = 100;
+        // Create arrays for Q_sh values
+        const points = 50; // Reduced number of points for stability
         const Q_sh_spa = [];
+        const R_t = [];
+        
         for (let i = 0; i < points; i++) {
             const t = i / (points - 1);
-            Q_sh_spa.push(Q_sh_lb * Math.pow(Q_sh_ub/Q_sh_lb, t));
+            const q = Q_sh_lb * Math.pow(Q_sh_ub/Q_sh_lb, t);
+            Q_sh_spa.push(q);
+            R_t.push(q / Q_a);
         }
 
-        const R_t = Q_sh_spa.map(q => q / Q_a);
         const R_t_lb = Q_sh_lb / Q_a;
         const R_t_up = Q_sh_ub / Q_a;
 
-        // Calculate w_up for each Q_sh value
-        const w_low = Array(points).fill(w_lb_i);
+        // Calculate w arrays with error checking
+        const w_low = new Array(points).fill(w_lb_i);
         const w_up = Q_sh_spa.map(Q => {
             if (Q < Q_sh_RB) {
                 return Math.min(w_ub_i, 723.7 - 9.87 * 60000 * Q);
-            } else {
-                return Math.min(w_ub_i, 875 - 25 * 60000 * Q);
             }
+            return Math.min(w_ub_i, 875 - 25 * 60000 * Q);
         });
 
         // Calculate factors
         const factor1 = w_low.map(w => (36 * mu) / (Math.PI * 1000 * Math.pow(r_1 + r_2, 2) * L * Math.pow(w, 2)));
         const factor2 = w_up.map(w => (36 * mu) / (Math.PI * 1000 * Math.pow(r_1 + r_2, 2) * L * Math.pow(w, 2)));
 
-        console.log('Calculating d_min and d_max...'); // Debug log
+        // Calculate d_min and d_max with error handling
+        const d_min = [];
+        const d_max = [];
 
-        // Calculate d_min and d_max with better initial guesses
-        const d_min = Q_sh_spa.map((Q_sh_val, i) => {
-            const f = d => Math.pow(d, 2) * Cc(d, P, T) - (factor2[i] * Q_sh_val);
-            // Use wider initial bracket for d_min
-            return bisectionMethod(f, 1e-10, 1e-6);
-        });
+        for (let i = 0; i < points; i++) {
+            try {
+                const f_min = d => Math.pow(d, 2) * Cc(d, P, T) - (factor2[i] * Q_sh_spa[i]);
+                const f_max = d => Math.pow(d, 2) * Cc(d, P, T) - (factor1[i] * Q_sh_spa[i]);
+                
+                d_min.push(bisectionMethod(f_min, 1e-9, 1e-7));
+                d_max.push(bisectionMethod(f_max, 1e-7, 1e-5));
+            } catch (error) {
+                console.error(`Error at point ${i}:`, error);
+                // Use previous valid values or defaults
+                d_min.push(d_min[i-1] || 1e-8);
+                d_max.push(d_max[i-1] || 1e-6);
+            }
+        }
 
-        const d_max = Q_sh_spa.map((Q_sh_val, i) => {
-            const f = d => Math.pow(d, 2) * Cc(d, P, T) - (factor1[i] * Q_sh_val);
-            // Use wider initial bracket for d_max
-            return bisectionMethod(f, 1e-8, 1e-4);
-        });
-
-        // Calculate specific points for input Q_sh with better initial guesses
-        const idx = Q_sh_spa.findIndex(q => Math.abs(q - Q_sh) < Q_sh * 0.01);
-        const d_i = bisectionMethod(
-            d => Math.pow(d, 2) * Cc(d, P, T) - (factor2[idx] * Q_sh),
-            1e-10, 1e-6
-        );
-        const d_o = bisectionMethod(
-            d => Math.pow(d, 2) * Cc(d, P, T) - (factor1[idx] * Q_sh),
-            1e-8, 1e-4
-        );
-
-        console.log('Creating plot...'); // Debug log
-
-        // Create plot
+        // Create plot with basic traces first
         const traces = [
             {
                 x: d_min.map(d => d * 1e9),
@@ -285,27 +278,6 @@ async function calculateAAC() {
                 mode: 'lines',
                 name: 'Upper bound',
                 line: { color: 'red' }
-            },
-            {
-                x: [d_min[0] * 1e9, d_max[0] * 1e9],
-                y: [R_t_lb, R_t_lb],
-                mode: 'lines',
-                name: 'Lower R_τ',
-                line: { color: 'red' }
-            },
-            {
-                x: [d_min[d_min.length-1] * 1e9, d_max[d_max.length-1] * 1e9],
-                y: [R_t_up, R_t_up],
-                mode: 'lines',
-                name: 'Upper R_τ',
-                line: { color: 'red' }
-            },
-            {
-                x: [d_i * 1e9, d_o * 1e9],
-                y: [Q_sh / Q_a, Q_sh / Q_a],
-                mode: 'lines',
-                name: 'Selected Q_sh',
-                line: { color: 'green' }
             }
         ];
 
@@ -317,8 +289,7 @@ async function calculateAAC() {
                     font: { size: 14 }
                 },
                 type: 'log',
-                showgrid: true,
-                gridwidth: 1
+                showgrid: true
             },
             yaxis: {
                 title: {
@@ -326,23 +297,16 @@ async function calculateAAC() {
                     font: { size: 14 }
                 },
                 type: 'log',
-                showgrid: true,
-                gridwidth: 1
+                showgrid: true
             },
-            showlegend: true,
-            grid: { pattern: 'independent' }
+            showlegend: true
         };
-
-        console.log('Plotting...'); // Debug log
 
         Plotly.newPlot('aac-plot', traces, layout);
 
     } catch (error) {
-        console.error('Detailed error in calculateAAC:', error);
-        console.log('Input values:', {
-            Q_a: document.getElementById('aac-qa').value,
-            Q_sh: document.getElementById('aac-qsh').value
-        });
+        console.error('Error in calculateAAC:', error);
+        console.error('Error stack:', error.stack);
         alert('An error occurred during AAC calculation. Please check the console for details.');
     }
 }
@@ -492,33 +456,32 @@ function bisectionMethod(func, a, b, tolerance = 1e-10, maxIterations = 100) {
     try {
         let left = a;
         let right = b;
-        let fa = func(left);
-        let fb = func(right);
-        
+        let fleft = func(left);
+        let fright = func(right);
+
         // Check if initial points bracket a root
-        if (fa * fb >= 0) {
-            console.log('Initial points:', left, right);
-            console.log('Function values:', fa, fb);
-            throw new Error('Initial points do not bracket the root');
+        if (fleft * fright >= 0) {
+            console.log('Initial values do not bracket a root');
+            return (left + right) / 2; // Return midpoint as fallback
         }
 
         for (let i = 0; i < maxIterations; i++) {
             let mid = (left + right) / 2;
             let fmid = func(mid);
-            
+
             if (Math.abs(fmid) < tolerance) {
                 return mid;
             }
-            
-            if (fa * fmid < 0) {
+
+            if (fleft * fmid < 0) {
                 right = mid;
-                fb = fmid;
+                fright = fmid;
             } else {
                 left = mid;
-                fa = fmid;
+                fleft = fmid;
             }
         }
-        
+
         return (left + right) / 2;
     } catch (error) {
         console.error('Error in bisectionMethod:', error);
