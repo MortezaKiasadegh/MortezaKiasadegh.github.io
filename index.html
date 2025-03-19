@@ -290,16 +290,12 @@
 
         function calculateAAC() {
             try {
-                console.log("Starting AAC calculation...");
-                
-                // Get input values
-                const Q_a = parseFloat(document.getElementById('aac-qa').value) / 60000;
-                const Q_sh = parseFloat(document.getElementById('aac-qsh').value) / 60000;
-                
                 // Constants
                 const P = 101325;
                 const T = 298.15;
                 const mu = 1.81809e-5 * Math.pow(T / 293.15, 1.5) * (293.15 + 110.4) / (T + 110.4);
+                const Q_a = parseFloat(document.getElementById('aac-qa').value) / 60000;
+                const Q_sh = parseFloat(document.getElementById('aac-qsh').value) / 60000;
                 
                 // Classifier properties
                 const r_1 = 56e-3;
@@ -311,22 +307,18 @@
                 const w_lb_i = 2 * Math.PI / 60 * 200;
                 const w_ub_i = 2 * Math.PI / 60 * 7000;
 
-                console.log("Creating Q_sh array...");
-                
-                // Create arrays
-                const points = 50; // Reduced for testing
+                // Create arrays for Q_sh values using logarithmic spacing
+                const points = 200; // Increased number of points
                 const Q_sh_spa = [];
                 for (let i = 0; i < points; i++) {
                     const t = i / (points - 1);
                     Q_sh_spa.push(Q_sh_lb * Math.pow(Q_sh_ub/Q_sh_lb, t));
                 }
-                
+
                 const R_t = Q_sh_spa.map(q => q / Q_a);
                 const R_t_lb = Q_sh_lb / Q_a;
                 const R_t_up = Q_sh_ub / Q_a;
 
-                console.log("Calculating w arrays...");
-                
                 // Calculate w arrays
                 const w_low = new Array(points).fill(w_lb_i);
                 const w_up = Q_sh_spa.map(Q => {
@@ -339,9 +331,7 @@
                 const factor1 = w_low.map(w => (36 * mu) / (Math.PI * 1000 * Math.pow(r_1 + r_2, 2) * L * Math.pow(w, 2)));
                 const factor2 = w_up.map(w => (36 * mu) / (Math.PI * 1000 * Math.pow(r_1 + r_2, 2) * L * Math.pow(w, 2)));
 
-                console.log("Calculating diameters...");
-                
-                // Calculate diameters
+                // Calculate d_min and d_max
                 const d_min = [];
                 const d_max = [];
                 
@@ -349,13 +339,22 @@
                     const f_min = d => Math.pow(d, 2) * Cc(d, P, T) - (factor2[i] * Q_sh_spa[i]);
                     const f_max = d => Math.pow(d, 2) * Cc(d, P, T) - (factor1[i] * Q_sh_spa[i]);
                     
-                    d_min.push(bisectionMethod(f_min, 1e-10, 1e-6));
-                    d_max.push(bisectionMethod(f_max, 1e-8, 1e-4));
+                    d_min.push(bisectionMethod(f_min, 1e-9, 1e-7));
+                    d_max.push(bisectionMethod(f_max, 1e-7, 1e-5));
                 }
 
-                console.log("Creating plot...");
-                
-                // Create plot data
+                // Calculate specific points for input Q_sh
+                const idx = Q_sh_spa.findIndex(q => Math.abs(q - Q_sh) < Q_sh * 0.01);
+                const d_i = bisectionMethod(
+                    d => Math.pow(d, 2) * Cc(d, P, T) - (factor2[idx] * Q_sh),
+                    1e-9, 1e-7
+                );
+                const d_o = bisectionMethod(
+                    d => Math.pow(d, 2) * Cc(d, P, T) - (factor1[idx] * Q_sh),
+                    1e-7, 1e-5
+                );
+
+                // Create plot
                 const traces = [
                     {
                         x: d_min.map(d => d * 1e9),
@@ -370,6 +369,27 @@
                         mode: 'lines',
                         name: 'Upper bound',
                         line: { color: 'red' }
+                    },
+                    {
+                        x: [d_min[0] * 1e9, d_max[0] * 1e9],
+                        y: [R_t_lb, R_t_lb],
+                        mode: 'lines',
+                        name: 'Lower R_τ',
+                        line: { color: 'red' }
+                    },
+                    {
+                        x: [d_min[d_min.length-1] * 1e9, d_max[d_max.length-1] * 1e9],
+                        y: [R_t_up, R_t_up],
+                        mode: 'lines',
+                        name: 'Upper R_τ',
+                        line: { color: 'red' }
+                    },
+                    {
+                        x: [d_i * 1e9, d_o * 1e9],
+                        y: [Q_sh / Q_a, Q_sh / Q_a],
+                        mode: 'lines',
+                        name: 'Selected Q_sh',
+                        line: { color: 'green' }
                     }
                 ];
 
@@ -381,7 +401,9 @@
                             font: { size: 14 }
                         },
                         type: 'log',
-                        showgrid: true
+                        showgrid: true,
+                        gridwidth: 1,
+                        range: [0, 4] // log10 range
                     },
                     yaxis: {
                         title: {
@@ -389,18 +411,20 @@
                             font: { size: 14 }
                         },
                         type: 'log',
-                        showgrid: true
+                        showgrid: true,
+                        gridwidth: 1,
+                        range: [0, 2] // log10 range
                     },
-                    showlegend: true
+                    showlegend: true,
+                    grid: {
+                        pattern: 'independent'
+                    }
                 };
 
-                console.log("Plotting...");
                 Plotly.newPlot('aac-plot', traces, layout);
-                console.log("AAC calculation complete");
 
             } catch (error) {
                 console.error('Error in calculateAAC:', error);
-                console.error('Error details:', error.stack);
                 alert('An error occurred during AAC calculation. Please check the console for details.');
             }
         }
