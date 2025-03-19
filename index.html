@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DMA Operational Range Calculator</title>
+    <title>Aerosol Instrument Operational Range Calculator</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_SVG"></script>
     <link rel="stylesheet" href="styles.css">
     <style>
         .card {
@@ -21,30 +22,82 @@
 </head>
 <body>
     <div class="container">
-        <div class="card">
+        <!-- DMA Section -->
+        <div class="card mb-4">
             <div class="card-header">
-                <h2>DMA Operational Range Calculator</h2>
+                <h2>DMA Operational Range</h2>
             </div>
             <div class="card-body">
                 <div class="row">
                     <div class="col-md-4">
                         <div class="form-group mb-3">
-                            <label for="qa">Aerosol Flow Rate (Q_a) [L/min]:</label>
-                            <input type="number" class="form-control" id="qa" value="1.5" min="0.1" max="10" step="0.1">
+                            <label for="dma-qa">Aerosol Flow Rate ($Q_{\mathrm{a}}$) [L/min]:</label>
+                            <input type="number" class="form-control" id="dma-qa" value="1.5" min="0.1" max="10" step="0.1">
                         </div>
                         <div class="form-group mb-3">
-                            <label for="qsh">Sheath Flow Rate (Q_sh) [L/min]:</label>
-                            <input type="number" class="form-control" id="qsh" value="10" min="2" max="30" step="0.1">
+                            <label for="dma-qsh">Sheath Flow Rate ($Q_{\mathrm{sh}}$) [L/min]:</label>
+                            <input type="number" class="form-control" id="dma-qsh" value="10" min="2" max="30" step="0.1">
                         </div>
-                        <button class="btn btn-primary" onclick="calculateDMA()">Calculate</button>
+                        <button class="btn btn-primary" onclick="calculateDMA()">Calculate DMA</button>
                     </div>
                     <div class="col-md-8">
-                        <div id="plot" class="plot-container"></div>
+                        <div id="dma-plot" class="plot-container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AAC Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2>AAC Operational Range</h2>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label for="aac-qa">Aerosol Flow Rate ($Q_{\mathrm{a}}$) [L/min]:</label>
+                            <input type="number" class="form-control" id="aac-qa" value="0.3" min="0.1" max="10" step="0.1">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="aac-qsh">Sheath Flow Rate ($Q_{\mathrm{sh}}$) [L/min]:</label>
+                            <input type="number" class="form-control" id="aac-qsh" value="3" min="2" max="15" step="0.1">
+                        </div>
+                        <button class="btn btn-primary" onclick="calculateAAC()">Calculate AAC</button>
+                    </div>
+                    <div class="col-md-8">
+                        <div id="aac-plot" class="plot-container"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CPMA Section -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h2>CPMA Operational Range</h2>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group mb-3">
+                            <label for="cpma-qa">Aerosol Flow Rate ($Q_{\mathrm{a}}$) [L/min]:</label>
+                            <input type="number" class="form-control" id="cpma-qa" value="0.3" min="0.1" max="10" step="0.1">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="cpma-rm">Mass Resolution ($R_{\mathrm{m}}$):</label>
+                            <input type="number" class="form-control" id="cpma-rm" value="5" min="0.001" max="200" step="0.1">
+                        </div>
+                        <button class="btn btn-primary" onclick="calculateCPMA()">Calculate CPMA</button>
+                    </div>
+                    <div class="col-md-8">
+                        <div id="cpma-plot" class="plot-container"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
     <script>
         // JavaScript code here to ensure everything is loaded
         function Cc(d, P, T) {
@@ -104,8 +157,8 @@
                 const P = 101325;
                 const T = 298.15;
                 const mu = 1.81809e-5 * Math.pow(T / 293.15, 1.5) * (293.15 + 110.4) / (T + 110.4);
-                const Q_a = parseFloat(document.getElementById('qa').value) / 60000;
-                const Q_sh = parseFloat(document.getElementById('qsh').value) / 60000;
+                const Q_a = parseFloat(document.getElementById('dma-qa').value) / 60000;
+                const Q_sh = parseFloat(document.getElementById('dma-qsh').value) / 60000;
                 
                 console.log('Q_a:', Q_a);
                 
@@ -226,7 +279,7 @@
                     mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_SVG'
                 };
 
-                Plotly.newPlot('plot', traces, layout, config);
+                Plotly.newPlot('dma-plot', traces, layout, config);
                 console.log('Calculation completed successfully');
                 
             } catch (error) {

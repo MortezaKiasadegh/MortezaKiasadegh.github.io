@@ -196,37 +196,142 @@ async function calculateDMA() {
 }
 
 async function calculateAAC() {
-    await initializePyodide();
-    
-    const Q_a = parseFloat(document.getElementById('aac-qa').value);
-    const Q_sh = parseFloat(document.getElementById('aac-qsh').value);
-    
-    const result = await pyodide.runPythonAsync(`calculate_AAC(${Q_a}, ${Q_sh})`);
-    
-    const trace = {
-        x: [result.d_min, result.d_max],
-        y: [result.R_t, result.R_t],
-        mode: 'lines',
-        name: 'AAC Range',
-        line: {
-            color: 'blue',
-            width: 2
-        }
-    };
-    
-    const layout = {
-        title: 'AAC Operational Range',
-        xaxis: {
-            title: 'Particle diameter (nm)',
-            type: 'log'
-        },
-        yaxis: {
-            title: 'R_t',
-            type: 'log'
-        }
-    };
-    
-    Plotly.newPlot('aac-plot', [trace], layout);
+    try {
+        // Constants
+        const P = 101325;
+        const T = 298.15;
+        const mu = 1.81809e-5 * Math.pow(T / 293.15, 1.5) * (293.15 + 110.4) / (T + 110.4);
+        const Q_a = parseFloat(document.getElementById('aac-qa').value) / 60000;
+        const Q_sh = parseFloat(document.getElementById('aac-qsh').value) / 60000;
+        
+        // Classifier properties
+        const r_1 = 56e-3;
+        const r_2 = 60e-3;
+        const L = 0.206;
+        const Q_sh_lb = 2 / 60000;
+        const Q_sh_ub = 15 / 60000;
+        const Q_sh_RB = 10 / 60000;
+        const w_lb_i = 2 * Math.PI / 60 * 200;
+        const w_ub_i = 2 * Math.PI / 60 * 7000;
+
+        // Create arrays for Q_sh values
+        const points = 100;
+        const Q_sh_spa = Array.from({length: points}, (_, i) => {
+            const t = i / (points - 1);
+            return Math.pow(10, Math.log10(Q_sh_lb) * (1-t) + Math.log10(Q_sh_ub) * t);
+        });
+        const R_t = Q_sh_spa.map(q => q / Q_a);
+        const R_t_lb = Q_sh_lb / Q_a;
+        const R_t_up = Q_sh_ub / Q_a;
+
+        // Calculate w_up for each Q_sh value
+        const w_low = Array(points).fill(w_lb_i);
+        const w_up = Q_sh_spa.map(Q => {
+            if (Q < Q_sh_RB) {
+                return Math.min(w_ub_i, 723.7 - 9.87 * 60000 * Q);
+            } else {
+                return Math.min(w_ub_i, 875 - 25 * 60000 * Q);
+            }
+        });
+
+        const factor1 = w_low.map(w => (36 * mu) / (Math.PI * 1000 * Math.pow(r_1 + r_2, 2) * L * Math.pow(w, 2)));
+        const factor2 = w_up.map(w => (36 * mu) / (Math.PI * 1000 * Math.pow(r_1 + r_2, 2) * L * Math.pow(w, 2)));
+
+        // Calculate d_min and d_max
+        const d_min = Q_sh_spa.map((Q_sh_val, i) => {
+            const f = d => Math.pow(d, 2) * Cc(d, P, T) - (factor2[i] * Q_sh_val);
+            return bisectionMethod(f, 1e-9, 1e-7);
+        });
+
+        const d_max = Q_sh_spa.map((Q_sh_val, i) => {
+            const f = d => Math.pow(d, 2) * Cc(d, P, T) - (factor1[i] * Q_sh_val);
+            return bisectionMethod(f, 1e-7, 1e-5);
+        });
+
+        // Calculate specific points for input Q_sh
+        const idx = Q_sh_spa.findIndex(q => Math.abs(q - Q_sh) < Q_sh * 0.01);
+        const d_i = bisectionMethod(
+            d => Math.pow(d, 2) * Cc(d, P, T) - (factor2[idx] * Q_sh),
+            1e-9, 1e-7
+        );
+        const d_o = bisectionMethod(
+            d => Math.pow(d, 2) * Cc(d, P, T) - (factor1[idx] * Q_sh),
+            1e-7, 1e-5
+        );
+
+        // Create plot
+        const traces = [
+            {
+                x: d_min.map(d => d * 1e9),
+                y: R_t,
+                mode: 'lines',
+                name: 'Lower bound',
+                line: { color: 'red' }
+            },
+            {
+                x: d_max.map(d => d * 1e9),
+                y: R_t,
+                mode: 'lines',
+                name: 'Upper bound',
+                line: { color: 'red' }
+            },
+            {
+                x: [d_min[0] * 1e9, d_max[0] * 1e9],
+                y: [R_t_lb, R_t_lb],
+                mode: 'lines',
+                name: 'Lower R_τ',
+                line: { color: 'red' }
+            },
+            {
+                x: [d_min[d_min.length-1] * 1e9, d_max[d_max.length-1] * 1e9],
+                y: [R_t_up, R_t_up],
+                mode: 'lines',
+                name: 'Upper R_τ',
+                line: { color: 'red' }
+            },
+            {
+                x: [d_i * 1e9, d_o * 1e9],
+                y: [Q_sh / Q_a, Q_sh / Q_a],
+                mode: 'lines',
+                name: 'Selected Q_sh',
+                line: { color: 'green' }
+            }
+        ];
+
+        const layout = {
+            title: 'AAC Operational Range',
+            xaxis: {
+                title: {
+                    text: 'Aerodynamic diameter, $d_{\\mathrm{a}}$ (nm)',
+                    font: { size: 14 }
+                },
+                type: 'log',
+                showgrid: true,
+                gridwidth: 1
+            },
+            yaxis: {
+                title: {
+                    text: '$R_{\\tau}$',
+                    font: { size: 14 }
+                },
+                type: 'log',
+                showgrid: true,
+                gridwidth: 1
+            },
+            showlegend: true,
+            grid: { pattern: 'independent' }
+        };
+
+        const config = {
+            mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_SVG'
+        };
+
+        Plotly.newPlot('aac-plot', traces, layout, config);
+
+    } catch (error) {
+        console.error('Error in calculateAAC:', error);
+        alert('An error occurred during AAC calculation. Please check the console for details.');
+    }
 }
 
 async function calculateCPMA() {
