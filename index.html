@@ -3,532 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Aerosol Instrument Operational Range Calculator</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_SVG"></script>
+    <title>Morteza Kiasadegh - Mechanical Engineering Ph.D. Candidate</title>
     <link rel="stylesheet" href="styles.css">
-    <style>
-        .card {
-            margin: 20px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-        .plot-container {
-            height: 600px;
-            width: 100%;
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <div class="container">
-        <!-- DMA Section -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h2>DMA Operational Range</h2>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="form-group mb-3">
-                            <label for="dma-qa">Aerosol Flow Rate ($Q_{\\mathrm{a}}$) [L/min]:</label>
-                            <input type="number" class="form-control" id="dma-qa" value="0.3" min="0.1" max="10" step="0.1">
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="dma-qsh">Sheath Flow Rate ($Q_{\\mathrm{sh}}$) [L/min]:</label>
-                            <input type="number" class="form-control" id="dma-qsh" value="3" min="2" max="30" step="0.1">
-                        </div>
-                        <button class="btn btn-primary" onclick="calculateDMA()">Calculate DMA</button>
-                    </div>
-                    <div class="col-md-8">
-                        <div id="dma-plot" class="plot-container"></div>
-                    </div>
-                </div>
+    <header>
+        <div class="container">
+            <h1>Morteza Kiasadegh</h1>
+            <div class="badges">
+                <span class="badge">Ph.D. Mechanical Engineering</span>
+                <span class="badge">University of Alberta</span>
+                <span class="badge">Aerosol Science</span>
             </div>
         </div>
+    </header>
 
-        <!-- AAC Section -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h2>AAC Operational Range</h2>
+    <main class="container">
+        <section id="about">
+            <h2>About Me</h2>
+            <p>Hi! I'm Morteza Kiasadegh, a Ph.D. candidate in Mechanical Engineering at the University of Alberta, specializing in aerosol science and particle measurement techniques. I hold both B.Sc. and M.Sc. degrees in Mechanical Engineering from Shiraz University, Iran. My research combines computational fluid dynamics (CFD), experimental measurements, and numerical modeling to study particle behavior in engineered and biological systems.</p>
+        </section>
+
+        <section id="education">
+            <h2>🎓 Education</h2>
+            <div class="education-item">
+                <h3>Ph.D. in Mechanical Engineering</h3>
+                <p class="institution">University of Alberta, Edmonton, Canada</p>
+                <p class="date">Sep 2022 – Present | GPA: 3.9/4</p>
+                <p class="details">Research Area: Tandem particle classification, aerosol instrumentation, data inversion</p>
             </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="form-group mb-3">
-                            <label for="aac-qa">Aerosol Flow Rate ($Q_{\\mathrm{a}}$) [L/min]:</label>
-                            <input type="number" class="form-control" id="aac-qa" value="0.3" min="0.1" max="10" step="0.1">
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="aac-qsh">Sheath Flow Rate ($Q_{\\mathrm{sh}}$) [L/min]:</label>
-                            <input type="number" class="form-control" id="aac-qsh" value="3" min="2" max="15" step="0.1">
-                        </div>
-                        <button class="btn btn-primary" onclick="calculateAAC()">Calculate AAC</button>
-                    </div>
-                    <div class="col-md-8">
-                        <div id="aac-plot" class="plot-container"></div>
-                    </div>
-                </div>
+            <div class="education-item">
+                <h3>M.Sc. in Mechanical Engineering – Energy Conversion</h3>
+                <p class="institution">Shiraz University, Shiraz, Iran</p>
+                <p class="date">Sep 2013 – Jan 2018 | GPA: 3.4/4</p>
+                <p class="details">Thesis: Transient numerical simulation of airflow and fiber particle deposition in human upper airway model</p>
             </div>
+            <div class="education-item">
+                <h3>B.Sc. in Mechanical Engineering</h3>
+                <p class="institution">Shiraz University, Shiraz, Iran</p>
+                <p class="date">Sep 2009 – Sep 2013 | GPA: 3.5/4</p>
+            </div>
+        </section>
+
+        <section id="experience">
+            <h2>🧪 Research & Professional Experience</h2>
+            <div class="experience-item">
+                <h3>Postgraduate Research Collaborator</h3>
+                <p class="institution">Shiraz University</p>
+                <ul>
+                    <li>Simulated ventilation and smoke exhaust systems for Line 2 of the Shiraz Railway Transport Organization</li>
+                </ul>
+            </div>
+        </section>
+
+        <section id="publications">
+            <h2>📚 Selected Publications</h2>
+            <ol class="publications-list">
+                <li>
+                    <strong>Naseri, A.</strong>, Abbasi-Atibeh, E., <strong>Kiasadegh, M.</strong>, et al. (2025). Characterization of particles generated by non-catalytic methane pyrolysis in a tubular flow reactor. <em>Aerosol Science and Technology</em>, 59(2), 163–184.
+                </li>
+                <li>
+                    <strong>Kiasadegh, M.</strong>, Emdad, H., Ahmadi, G., Abouali, O. (2020). Transient numerical simulation of airflow and fibrous particles in a human upper airway model. <em>Journal of Aerosol Science</em>, 140, 105480.
+                </li>
+                <li>
+                    <strong>Kiasadegh, M.</strong>, Dehghani, Z., Naseri, A., et al. (2019). Numerical simulation of airflow and ellipsoidal particle deposition in human upper and central respiratory tract. <em>ASME Fluids Engineering Division Summer Meeting</em>, Vol. 59087, V005T05A041.
+                </li>
+                <li>
+                    <strong>Kiasadegh, M.</strong>, Abouali, O., Emdad, H., Ahmadi, G. (2018). Numerical simulation of airflow and ellipsoidal particle deposition in human upper respiratory tract. <em>ASME Fluids Engineering Division Summer Meeting</em>, Vol. 51555, V001T02A005.
+                </li>
+            </ol>
+        </section>
+
+        <section id="interests">
+            <h2>🔬 Research Interests</h2>
+            <ul class="interests-list">
+                <li>Computational Fluid Dynamics (CFD)</li>
+                <li>Aerosol Science</li>
+                <li>Particle Measurement Techniques</li>
+                <li>Numerical Modeling</li>
+                <li>Particle Behavior in Engineered and Biological Systems</li>
+            </ul>
+        </section>
+
+        <section id="contact">
+            <h2>📫 Contact</h2>
+            <p>Feel free to reach out to me for collaborations or discussions about research in aerosol science and mechanical engineering.</p>
+            <div class="contact-links">
+                <a href="https://www.linkedin.com/in/morteza-kiasadegh" class="contact-link">
+                    <i class="fab fa-linkedin"></i> LinkedIn
+                </a>
+                <a href="https://scholar.google.com/citations?user=GGY3YMMAAAAJ&hl=en" class="contact-link">
+                    <i class="fas fa-graduation-cap"></i> Google Scholar
+                </a>
+                <a href="https://orcid.org/0009-0007-9691-602X" class="contact-link">
+                    <i class="fab fa-orcid"></i> ORCID
+                </a>
+                <a href="mailto:kiasadeg@ualberta.ca" class="contact-link">
+                    <i class="fas fa-envelope"></i> Email
+                </a>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Morteza Kiasadegh. All rights reserved.</p>
         </div>
-
-        <!-- CPMA Section -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h2>CPMA Operational Range</h2>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="form-group mb-3">
-                            <label for="cpma-qa">Aerosol Flow Rate ($Q_{\mathrm{a}}$) [L/min]:</label>
-                            <input type="number" class="form-control" id="cpma-qa" value="0.3" min="0.1" max="10" step="0.1">
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="cpma-rm">Mass Resolution ($R_{\mathrm{m}}$):</label>
-                            <input type="number" class="form-control" id="cpma-rm" value="5" min="0.001" max="200" step="0.1">
-                        </div>
-                        <button class="btn btn-primary" onclick="calculateCPMA()">Calculate CPMA</button>
-                    </div>
-                    <div class="col-md-8">
-                        <div id="cpma-plot" class="plot-container"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // JavaScript code here to ensure everything is loaded
-        function Cc(d, P, T) {
-            try {
-                const alpha = 1.165 * 2;
-                const beta = 0.483 * 2;
-                const gamma = 0.997 / 2;
-                const la = 67.30e-9;
-                
-                const lap = la * Math.pow(T / 296.15, 2) * (101325/P) * ((110.4 + 296.15) / (T + 110.4));
-                
-                return 1 + (lap / d) * (alpha + beta * Math.exp(-gamma * d / lap));
-            } catch (error) {
-                console.error('Error in Cc:', error);
-                throw error;
-            }
-        }
-
-        function bisectionMethod(func, a, b, tolerance = 1e-10, maxIterations = 100) {
-            try {
-                let fa = func(a);
-                let fb = func(b);
-                
-                if (fa * fb > 0) {
-                    throw new Error('Initial points do not bracket the root');
-                }
-                
-                for (let i = 0; i < maxIterations; i++) {
-                    let c = (a + b) / 2;
-                    let fc = func(c);
-                    
-                    if (Math.abs(fc) < tolerance) {
-                        return c;
-                    }
-                    
-                    if (fa * fc < 0) {
-                        b = c;
-                        fb = fc;
-                    } else {
-                        a = c;
-                        fa = fc;
-                    }
-                }
-                
-                return (a + b) / 2;
-            } catch (error) {
-                console.error('Error in bisectionMethod:', error);
-                throw error;
-            }
-        }
-
-        function calculateDMA() {
-            try {
-                console.log('Starting DMA calculation...');
-                
-                // Constants
-                const P = 101325;
-                const T = 298.15;
-                const mu = 1.81809e-5 * Math.pow(T / 293.15, 1.5) * (293.15 + 110.4) / (T + 110.4);
-                const Q_a = parseFloat(document.getElementById('dma-qa').value) / 60000;
-                const Q_sh = parseFloat(document.getElementById('dma-qsh').value) / 60000;
-                
-                console.log('Q_a:', Q_a);
-                
-                const Q_sh_lb = 2 / 60000;
-                const Q_sh_ub = 30 / 60000;
-                const r_1 = 9.37e-3;
-                const r_2 = 19.61e-3;
-                const L = 0.44369;
-                const e = 1.6e-19;
-                const V_min = 10;
-                const V_max = 10000;
-
-                const log_r_ratio = Math.log(r_2 / r_1);
-                const factor1 = (2 * V_min * L * e) / (3 * mu * log_r_ratio);
-                const factor2 = (2 * V_max * L * e) / (3 * mu * log_r_ratio);
-
-                // Create arrays
-                const points = 100;
-                const Q_sh_spa = Array.from({length: points}, (_, i) => 
-                    Q_sh_lb + (Q_sh_ub - Q_sh_lb) * i / (points - 1));
-                const R_B = Q_sh_spa.map(q => q / Q_a);
-                const R_B_lb = Q_sh_lb / Q_a;
-                const R_B_up = Q_sh_ub / Q_a;
-
-                console.log('Calculating d_min and d_max...');
-
-                // Calculate d_min and d_max
-                const d_min = Q_sh_spa.map(Q_sh_val => {
-                    const f = d => d - (factor1 / Q_sh_val) * Cc(d, P, T);
-                    return bisectionMethod(f, 1e-9, 1e-7);
-                });
-
-                const d_max = Q_sh_spa.map(Q_sh_val => {
-                    const f = d => d - (factor2 / Q_sh_val) * Cc(d, P, T);
-                    return bisectionMethod(f, 1e-7, 1e-5);
-                });
-
-                console.log('Plotting results...');
-
-                // Calculate specific points for input Q_sh
-                const f1 = d => d - (factor1 / Q_sh) * Cc(d, P, T);
-                const f2 = d => d - (factor2 / Q_sh) * Cc(d, P, T);
-                
-                const d_i = bisectionMethod(f1, 1e-9, 1e-7);
-                const d_o = bisectionMethod(f2, 1e-7, 1e-5);
-
-                // Convert to nanometers
-                const d_min_nm = d_min.map(d => d * 1e9);
-                const d_max_nm = d_max.map(d => d * 1e9);
-
-                // Create plot
-                const traces = [
-                    {
-                        x: d_min_nm,
-                        y: R_B,
-                        mode: 'lines',
-                        name: 'Lower bound',
-                        line: { color: 'red' }
-                    },
-                    {
-                        x: d_max_nm,
-                        y: R_B,
-                        mode: 'lines',
-                        name: 'Upper bound',
-                        line: { color: 'red' }
-                    },
-                    {
-                        x: [d_min_nm[0], d_max_nm[0]],
-                        y: [R_B_lb, R_B_lb],
-                        mode: 'lines',
-                        name: 'Lower R_B',
-                        line: { color: 'red' }
-                    },
-                    {
-                        x: [d_min_nm[d_min_nm.length-1], d_max_nm[d_max_nm.length-1]],
-                        y: [R_B_up, R_B_up],
-                        mode: 'lines',
-                        name: 'Upper R_B',
-                        line: { color: 'red' }
-                    },
-                    {
-                        x: [d_i * 1e9, d_o * 1e9],
-                        y: [Q_sh / Q_a, Q_sh / Q_a],
-                        mode: 'lines',
-                        name: 'Selected Q_sh',
-                        line: { color: 'blue' }
-                    }
-                ];
-
-                const layout = {
-                    title: 'DMA Operational Range',
-                    xaxis: {
-                        title: {
-                            text: '$$Mobility diameter, D_{\\mathrm{m}} (nm)$$',
-                            font: {
-                                size: 14
-                            }
-                        },
-                        type: 'log',
-                        showgrid: true,
-                        gridwidth: 1
-                    },
-                    yaxis: {
-                        title: {
-                            text: '$R_{\\mathrm{B}}$',
-                            font: {
-                                size: 14
-                            }
-                        },
-                        type: 'log',
-                        showgrid: true,
-                        gridwidth: 1
-                    },
-                    showlegend: true
-                };
-
-                const config = {
-                    mathjax: 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_SVG'
-                };
-
-                Plotly.newPlot('dma-plot', traces, layout, config);
-                console.log('Calculation completed successfully');
-                
-            } catch (error) {
-                console.error('Error in calculateDMA:', error);
-                alert('An error occurred during calculation. Please check the console for details.');
-            }
-        }
-
-        function calculateAAC() {
-            try {
-                // Constants
-                const P = 101325;
-                const T = 298.15;
-                const mu = 1.81809e-5 * Math.pow(T / 293.15, 1.5) * (293.15 + 110.4) / (T + 110.4);
-                const Q_a = parseFloat(document.getElementById('aac-qa').value) / 60000;
-                const Q_sh = parseFloat(document.getElementById('aac-qsh').value) / 60000;
-                
-                // Classifier properties
-                const r_1 = 56e-3;
-                const r_2 = 60e-3;
-                const L = 0.206;
-                const Q_sh_lb = 2 / 60000;
-                const Q_sh_ub = 15 / 60000;
-                const Q_sh_RB = 10 / 60000;
-                const w_lb_i = 2 * Math.PI / 60 * 200;
-                const w_ub_i = 2 * Math.PI / 60 * 7000;
-
-                // Create arrays for Q_sh values using logarithmic spacing
-                const points = 200; // Increased number of points
-                const Q_sh_spa = [];
-                for (let i = 0; i < points; i++) {
-                    const t = i / (points - 1);
-                    Q_sh_spa.push(Q_sh_lb * Math.pow(Q_sh_ub/Q_sh_lb, t));
-                }
-
-                const R_t = Q_sh_spa.map(q => q / Q_a);
-                const R_t_lb = Q_sh_lb / Q_a;
-                const R_t_up = Q_sh_ub / Q_a;
-
-                // Calculate w arrays
-                const w_low = new Array(points).fill(w_lb_i);
-                const w_up = Q_sh_spa.map(Q => {
-                    if (Q < Q_sh_RB) {
-                        return Math.min(w_ub_i, 723.7 - 9.87 * 60000 * Q);
-                    }
-                    return Math.min(w_ub_i, 875 - 25 * 60000 * Q);
-                });
-
-                const factor1 = w_low.map(w => (36 * mu) / (Math.PI * 1000 * Math.pow(r_1 + r_2, 2) * L * Math.pow(w, 2)));
-                const factor2 = w_up.map(w => (36 * mu) / (Math.PI * 1000 * Math.pow(r_1 + r_2, 2) * L * Math.pow(w, 2)));
-
-                // Calculate d_min and d_max
-                const d_min = [];
-                const d_max = [];
-                
-                for (let i = 0; i < points; i++) {
-                    const f_min = d => Math.pow(d, 2) * Cc(d, P, T) - (factor2[i] * Q_sh_spa[i]);
-                    const f_max = d => Math.pow(d, 2) * Cc(d, P, T) - (factor1[i] * Q_sh_spa[i]);
-                    
-                    d_min.push(bisectionMethod(f_min, 1e-9, 1e-7));
-                    d_max.push(bisectionMethod(f_max, 1e-7, 1e-5));
-                }
-
-                // Calculate specific points for input Q_sh
-                const idx = Q_sh_spa.findIndex(q => Math.abs(q - Q_sh) < Q_sh * 0.01);
-                const d_i = bisectionMethod(
-                    d => Math.pow(d, 2) * Cc(d, P, T) - (factor2[idx] * Q_sh),
-                    1e-9, 1e-7
-                );
-                const d_o = bisectionMethod(
-                    d => Math.pow(d, 2) * Cc(d, P, T) - (factor1[idx] * Q_sh),
-                    1e-7, 1e-5
-                );
-
-                // Create plot
-                const traces = [
-                    {
-                        x: d_min.map(d => d * 1e9),
-                        y: R_t,
-                        mode: 'lines',
-                        name: 'Lower bound',
-                        line: { color: 'red' }
-                    },
-                    {
-                        x: d_max.map(d => d * 1e9),
-                        y: R_t,
-                        mode: 'lines',
-                        name: 'Upper bound',
-                        line: { color: 'red' }
-                    },
-                    {
-                        x: [d_min[0] * 1e9, d_max[0] * 1e9],
-                        y: [R_t_lb, R_t_lb],
-                        mode: 'lines',
-                        name: 'Lower R_τ',
-                        line: { color: 'red' }
-                    },
-                    {
-                        x: [d_min[d_min.length-1] * 1e9, d_max[d_max.length-1] * 1e9],
-                        y: [R_t_up, R_t_up],
-                        mode: 'lines',
-                        name: 'Upper R_τ',
-                        line: { color: 'red' }
-                    },
-                    {
-                        x: [d_i * 1e9, d_o * 1e9],
-                        y: [Q_sh / Q_a, Q_sh / Q_a],
-                        mode: 'lines',
-                        name: 'Selected Q_sh',
-                        line: { color: 'green' }
-                    }
-                ];
-
-                const layout = {
-                    title: 'AAC Operational Range',
-                    xaxis: {
-                        title: {
-                            text: 'Aerodynamic diameter, $d_{\\mathrm{a}}$ (nm)',
-                            font: { size: 14 }
-                        },
-                        type: 'log',
-                        showgrid: true,
-                        gridwidth: 1,
-                        range: [0, 4] // log10 range
-                    },
-                    yaxis: {
-                        title: {
-                            text: '$R_{\\tau}$',
-                            font: { size: 14 }
-                        },
-                        type: 'log',
-                        showgrid: true,
-                        gridwidth: 1,
-                        range: [0, 2] // log10 range
-                    },
-                    showlegend: true,
-                    grid: {
-                        pattern: 'independent'
-                    }
-                };
-
-                Plotly.newPlot('aac-plot', traces, layout);
-
-            } catch (error) {
-                console.error('Error in calculateAAC:', error);
-                alert('An error occurred during AAC calculation. Please check the console for details.');
-            }
-        }
-
-        async function calculateCPMA() {
-            try {
-                const P = 101325;
-                const T = 298.15;
-                const mu = 1.81809e-5 * Math.pow(T / 293.15, 1.5) * (293.15 + 110.4) / (T + 110.4);
-                const Q_a = parseFloat(document.getElementById('cpma-qa').value) / 60000;
-
-                const r_1 = 60e-3, r_2 = 61e-3, r_c = 60.5e-3;
-                const L = 0.2;
-                const e = 1.6e-19;
-                const V_min = 0.1, V_max = 1000;
-                const w_lb_i = 2 * Math.PI / 60 * 200;
-                const w_ub_i = 2 * Math.PI / 60 * 12000;
-                const k = 1000 * Math.PI / 6;
-                const D_m = 3;
-
-                const points = 100;
-                const R_m_spa = Array.from({ length: points }, (_, i) => {
-                    const t = i / (points - 1);
-                    return Math.pow(10, Math.log10(0.001) * (1 - t) + Math.log10(200) * t);
-                });
-
-                const log_r_ratio = Math.log(r_2 / r_1);
-                const factor1 = e * V_min / (k * Math.pow(r_c, 2) * log_r_ratio);
-                const factor2 = e * V_max / (k * Math.pow(r_c, 2) * log_r_ratio);
-                const factor3 = 3 * mu * Q_a / (2 * k * Math.pow(r_c, 2) * L);
-
-                const d_min = [];
-                const d_max = [];
-
-                for (let i = 0; i < points; i++) {
-                    const R_m = R_m_spa[i];
-                    const d_m_max = Math.pow((R_m + 1) / R_m, 1 / D_m) * 1e-9; // starting point
-                    const f_min = d => (Math.pow(d, D_m) - Math.pow(d_m_max, D_m) + 
-                                    (factor3 / Math.pow(w_lb_i, 2)) * (d_m_max / Cc(d_m_max, P, T))) /
-                                    Math.abs(Math.pow(d, D_m));
-                    const f_max = d => (Math.pow(d, D_m) - Math.pow(d_m_max, D_m) + 
-                                    (factor3 / Math.pow(w_ub_i, 2)) * (d_m_max / Cc(d_m_max, P, T))) /
-                                    Math.abs(Math.pow(d, D_m));
-                    d_min.push(bisectionMethod(f_min, 1e-9, 1e-7));
-                    d_max.push(bisectionMethod(f_max, 1e-7, 1e-5));
-                }
-
-                const trapezoid_x = [
-                    d_min[0] * 1e9, d_max[0] * 1e9,
-                    d_max[d_max.length - 1] * 1e9, d_min[d_min.length - 1] * 1e9,
-                    d_min[0] * 1e9
-                ];
-                const trapezoid_y = [
-                    R_m_spa[0], R_m_spa[0],
-                    R_m_spa[R_m_spa.length - 1], R_m_spa[R_m_spa.length - 1],
-                    R_m_spa[0]
-                ];
-
-                const traces = [
-                    {
-                        x: d_min.map(d => d * 1e9),
-                        y: R_m_spa,
-                        mode: 'lines',
-                        name: 'Lower Bound',
-                        line: { color: 'blue' }
-                    },
-                    {
-                        x: d_max.map(d => d * 1e9),
-                        y: R_m_spa,
-                        mode: 'lines',
-                        name: 'Upper Bound',
-                        line: { color: 'blue' }
-                    },
-                    {
-                        x: trapezoid_x,
-                        y: trapezoid_y,
-                        fill: 'toself',
-                        fillcolor: 'rgba(0, 0, 255, 0.2)',
-                        line: { color: 'rgba(0,0,255,0.5)' },
-                        type: 'scatter',
-                        name: 'CPMA Trapezoidal'
-                    }
-                ];
-
-                const layout = {
-                    title: 'CPMA Operational Range (Trapezoidal)',
-                    xaxis: { title: 'Mobility Diameter (nm)', type: 'log' },
-                    yaxis: { title: 'R_m', type: 'log' },
-                    showlegend: true
-                };
-
-                Plotly.newPlot('cpma-plot', traces, layout);
-
-            } catch (error) {
-                console.error('Error in calculateCPMA:', error);
-            }
-        }
-
-        // Calculate initial plot when page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            calculateDMA();
-            calculateAAC();
-            calculateCPMA();
-        });
-    </script>
+    </footer>
 </body>
 </html> 
