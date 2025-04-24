@@ -53,5 +53,5 @@ Thesis: Transient numerical simulation of airflow and fiber particle deposition 
 Feel free to reach out to me for collaborations or discussions about research in aerosol science and mechanical engineering.
 
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue)](https://www.linkedin.com/in/morteza-kiasadegh)
-[![Google Scholar](https://img.shields.io/badge/Google%20Scholar-View%20Publications-green)](https://scholar.google.com/citations?user=YOUR_SCHOLAR_ID)
-[![Email](https://img.shields.io/badge/Email-Contact-red)](mailto:your.email@ualberta.ca) 
+[![Google Scholar](https://img.shields.io/badge/Google%20Scholar-View%20Publications-green)](https://scholar.google.com/citations?user=GGY3YMMAAAAJ)
+[![Email](https://img.shields.io/badge/Email-Contact-red)](mailto:kiasadeg@ualberta.ca) 
